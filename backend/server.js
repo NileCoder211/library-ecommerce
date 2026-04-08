@@ -41,9 +41,11 @@ if (process.env.NODE_ENV === "production") {
 
   app.use(express.static(frontendPath));
 
-  app.get("/*", (req, res) => {
+  // ✅ Catch-all WITHOUT using path-to-regexp
+  app.use((req, res) => {
     res.sendFile(path.join(frontendPath, "index.html"));
   });
+} });
 }
 
 app.listen(PORT, () => {
