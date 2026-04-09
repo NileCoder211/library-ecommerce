@@ -50,7 +50,7 @@ function App() {
           />
           <Route
             path="/login"
-            element={!user ? <LoginPage /> : <Navigate to="/" />}
+            element={!user ? <LogInPage /> : <Navigate to="/" />}
           />
           <Route
             path="/secret-dashboard"
