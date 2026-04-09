@@ -4,6 +4,7 @@ import { useProductStore } from "../stores/useProductStore";
 import FeaturedProducts from "../components/FeaturedProducts";
 import Authors from "../components/Authors";
 import Footer from "../components/Footer";
+import ExecutiveTeam from "../components/ExecutiveTeam"
 
 const categories = [
   { href: "/stream1", name: "Purpose", imageUrl: "/stream1.png" },
@@ -30,21 +31,23 @@ export default function Hero() {
 
   return (
     <div>
-      <section className=" relative min-h-[90vh] flex items-center overflow-hidden bg-[url(/image1.png)] bg-cover bg-center ">
-        {/* 🔥 Overlay goes HERE */}
+      <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-[url(/image1.png)] bg-cover bg-center">
+        {/* Overlay */}
         <div className="absolute inset-0 bg-black/65"></div>
-        <div className="container mx-auto grid md:grid-cols-2 items-center gap-10 px-6">
-          {/* LEFT CONTENT */}
+
+        {/* Content */}
+        <div className="container mx-auto flex flex-col md:flex-row items-center gap-10 px-6 relative z-10">
+          {/* LEFT (50%) */}
           <div
-            className={`space-y-6 transition-all duration-700 ${show ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-10"}`}
+            className={`w-full md:w-1/2 space-y-6 transition-all duration-700 ${
+              show ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-10"
+            }`}
           >
-            {/* Heading */}
-            <h1 className="text-4xl md:text-5xl font-bold leading-tight">
+            <h1 className="text-4xl sm:text-2xl md:text-3xl sm:font-semi-bold font-bold leading-tight">
               Discover Your Next <br />
               Favorite Books
             </h1>
 
-            {/* Description */}
             <p className="text-xl max-w-md">
               Find the best books from your favorite{" "}
               <span className="font-bold text-3xl text-white">
@@ -53,7 +56,6 @@ export default function Hero() {
               . Explore new collections and enjoy reading like never before.
             </p>
 
-            {/* Buttons */}
             <div className="flex gap-4">
               <button className="bg-yellow-500 px-6 py-3 cursor-pointer border rounded-lg text-white font-semibold transition hover:bg-white hover:text-yellow-500 hover:scale-105">
                 Shop Now
@@ -62,21 +64,17 @@ export default function Hero() {
               <button className="border px-6 py-3 rounded-lg cursor-pointer font-semibold transition hover:bg-black hover:text-white">
                 View Collection
               </button>
-              {/* Floating small element */}
             </div>
-            <div className="absolute top-50 right-0 w-40 h-40 bg-[url(/image5.jpg)] bg-cover bg-center rounded-full animate-bounce opacity-100"></div>
           </div>
 
-          {/* RIGHT SIDE */}
-          <div className="relative flex justify-center items-center">
-            {/* Background Circle */}
+          {/* RIGHT (50%) */}
+          <div className="w-full md:w-1/2 relative flex justify-center items-center">
             <div
-              className={`absolute w-[500px] h-[500px] bg-[url(/image2.jpg)] bg-cover bg-center bg-transparent rounded-full transition-all duration-700 ${show ? "scale-100 opacity-100" : "scale-75 opacity-0"}`}
-            ></div>
-
-            {/* Discount Badge */}
-            <div
-              className={`absolute bottom-30 right-10 w-30 h-30 bg-[url(/image3.jpg)] bg-cover bg-center animate-bounce text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg transition-all duration-700 ${show ? "opacity-100 scale-100" : "opacity-0 scale-50"}`}
+              className={`w-[300px] h-[300px] md:w-[500px] md:h-[500px] 
+        bg-[url(/image2.jpg)] bg-cover bg-center rounded-full
+        transition-all duration-700 ${
+          show ? "scale-100 opacity-100" : "scale-75 opacity-0"
+        }`}
             ></div>
           </div>
         </div>
@@ -103,6 +101,7 @@ export default function Hero() {
         </div>
       </div>
       <Authors />
+      <ExecutiveTeam />
       <Footer />
     </div>
   );
