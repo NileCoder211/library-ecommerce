@@ -4,7 +4,7 @@ import { useProductStore } from "../stores/useProductStore";
 import FeaturedProducts from "../components/FeaturedProducts";
 import Authors from "../components/Authors";
 import Footer from "../components/Footer";
-import ExecutiveTeam from "../components/ExecutiveTeam"
+import ExecutiveTeam from "../components/ExecutiveTeam";
 import FAQ from "../components/Faq";
 import ContactForm from "../components/ContactForm";
 import BookAppointment from "../components/BookAppointment";
@@ -31,15 +31,14 @@ export default function Hero() {
     fetchFeaturedProducts();
   }, [fetchFeaturedProducts]);
 
-
   return (
     <div>
-      <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-[url(/image1.png)] bg-cover bg-center">
+      <section className="relative min-h-[90vh] flex items-center  overflow-hidden bg-[url(/image1.png)] bg-cover bg-center">
         {/* Overlay */}
         <div className="absolute inset-0 bg-black/65"></div>
 
         {/* Content */}
-        <div className="container mx-auto flex flex-col md:flex-row items-center gap-10 px-6 relative z-10">
+        <div className="container mt-15 mx-auto flex flex-col md:flex-row items-center gap-10 px-6 relative z-10">
           {/* LEFT (50%) */}
           <div
             className={`w-full md:w-1/2 space-y-6 transition-all duration-700 ${
@@ -47,7 +46,8 @@ export default function Hero() {
             }`}
           >
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold leading-snug">
-              Discover Your Next Favorite Books
+              Discover Your Next Favorite Books{" "}
+              {/* git checkout -b feature/my-update for new branch */}
             </h1>
 
             <p className="text-xl max-w-md">
