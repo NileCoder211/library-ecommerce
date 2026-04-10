@@ -52,7 +52,7 @@ export default function Hero() {
             <p className="text-xl max-w-md">
               Find the best books from your favorite{" "}
               <span className="font-bold text-3xl text-white">
-                Author Boniface Mwangi
+                Author Dr.Boniface M
               </span>
               . Explore new collections and enjoy reading like never before.
             </p>
