@@ -5,6 +5,7 @@ import FeaturedProducts from "../components/FeaturedProducts";
 import Authors from "../components/Authors";
 import Footer from "../components/Footer";
 import ExecutiveTeam from "../components/ExecutiveTeam"
+import FAQ from "../components/Faq";
 
 const categories = [
   { href: "/stream1", name: "Purpose", imageUrl: "/stream1.png" },
@@ -100,6 +101,7 @@ export default function Hero() {
           )}
         </div>
       </div>
+      < FAQ />
       <Authors />
       <ExecutiveTeam />
       <Footer />
