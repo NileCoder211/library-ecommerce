@@ -6,6 +6,8 @@ import Authors from "../components/Authors";
 import Footer from "../components/Footer";
 import ExecutiveTeam from "../components/ExecutiveTeam"
 import FAQ from "../components/Faq";
+import ContactForm from "../components/ContactForm";
+import BookAppointment from "../components/BookAppointment";
 
 const categories = [
   { href: "/stream1", name: "Purpose", imageUrl: "/stream1.png" },
@@ -44,9 +46,8 @@ export default function Hero() {
               show ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-10"
             }`}
           >
-            <h1 className="text-4xl sm:text-2xl md:text-3xl sm:font-semi-bold font-bold leading-tight">
-              Discover Your Next <br />
-              Favorite Books
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold leading-snug">
+              Discover Your Next Favorite Books
             </h1>
 
             <p className="text-xl max-w-md">
@@ -101,9 +102,11 @@ export default function Hero() {
           )}
         </div>
       </div>
-      < FAQ />
+      <BookAppointment />
+      <FAQ />
       <Authors />
       <ExecutiveTeam />
+      <ContactForm />
       <Footer />
     </div>
   );

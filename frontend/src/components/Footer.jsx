@@ -77,11 +77,11 @@ export default function Footer() {
             <ul className="mt-4 space-y-3 text-sm">
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-emerald-400" />
-                Legacyscrollsupport@.com
+                Legacyscrollsinc.com
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-emerald-400" />
-                +254 700 000000
+                +254 723439603
               </li>
               <li className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-emerald-400" />

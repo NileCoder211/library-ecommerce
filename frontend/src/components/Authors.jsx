@@ -39,7 +39,7 @@ const authors = [
 export default function Authors() {
   return (
     <section className="py-16 bg-gray-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-4 lg:px-8 ">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -75,7 +75,7 @@ export default function Authors() {
                 <p className="text-emerald-400 text-sm">{author.role}</p>
                 <p className="mt-3 text-gray-400 text-sm">{author.bio}</p>
 
-                <div className="flex space-x-4 mt-4">
+                <div className="flex flex-wrap justify-center items-center space-x-4 mt-4">
                   <a
                     href={author.twitter}
                     className="text-gray-400 hover:text-emerald-400"

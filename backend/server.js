@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import path from "path";
 
 
+
 import authRoutes from "./routes/authRoute.js";
 import productRoutes from "./routes/productRoute.js";
 import cartRoutes from "./routes/cartRoute.js";
@@ -22,7 +23,6 @@ const __dirname = path.resolve();
 
 app.use(express.json({ limit: "10mb" })); // allows you to parse the body of the request
 app.use(cookieParser());
-
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);

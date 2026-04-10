@@ -78,7 +78,7 @@ export default function FAQ() {
                         transition={{ duration: 0.25, ease: "easeInOut" }}
                         className="overflow-hidden"
                       >
-                        <p className="mt-3 text-gray-600">{faq.answer}</p>
+                        <p className="mt-3 text-gray-400">{faq.answer}</p>
                       </motion.div>
                     )}
                   </AnimatePresence>
