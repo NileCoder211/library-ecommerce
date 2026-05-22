@@ -27,16 +27,21 @@ const handleSubmit = (e) => {
   console.log("works here also?");
 };
 
+const handleGoogleLogin = () => {
+  window.location.href =
+    "http://localhost:5000/api/auth/google";
+};
+
 
   return (
-    <div className="flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="flex flex-col justify-center py-3 sm:px-6 lg:px-8">
       <motion.div
         className="sm:mx-auto sm:w-full sm:max-w-md"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
       >
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-emerald-400">
+        <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900">
           Create your account
         </h2>
       </motion.div>
@@ -47,13 +52,18 @@ const handleSubmit = (e) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.2 }}
       >
-        <div className="bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10">
+        <div className=" space-y-5
+    bg-[#fcfcfc]
+    border border-gray-300
+    shadow-[0_8px_30px_rgba(0,0,0,0.06)]
+    rounded-2xl
+    p-6 md:p-8      py-8 px-4  sm:rounded-lg sm:px-10">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Name */}
             <div>
               <label
                 htmlFor="name"
-                className="block text-sm font-medium text-gray-300"
+                className="block text-sm font-medium text-gray-400"
               >
                 Full name
               </label>
@@ -70,8 +80,20 @@ const handleSubmit = (e) => {
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
-                  className="block w-full px-3 py-2 pl-10 bg-gray-700 border border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-emerald-400 focus:border-emerald-400 sm:text-sm"
-                  placeholder="John Doe"
+                  className="block w-full
+                           bg-white
+                             border 
+                             border-gray-300
+                             text-black
+                             p-3
+                             focus:outline-none
+                            focus:ring-2
+                           focus:ring-black 
+                            px-3 py-2 pl-10   
+                            rounded-md shadow-sm
+                             placeholder-gray-400   
+                             sm:text-sm"
+                  placeholder="Your Full Name"
                 />
               </div>
             </div>
@@ -80,7 +102,7 @@ const handleSubmit = (e) => {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-300"
+                className="block text-sm font-medium text-gray-400"
               >
                 Email address
               </label>
@@ -97,7 +119,19 @@ const handleSubmit = (e) => {
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
-                  className="block w-full px-3 py-2 pl-10 bg-gray-700 border border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-emerald-400 focus:border-emerald-400 sm:text-sm"
+                  className="block w-full
+                           bg-white
+                             border 
+                             border-gray-300
+                             text-black
+                             p-3
+                             focus:outline-none
+                            focus:ring-2
+                           focus:ring-black 
+                            px-3 py-2 pl-10   
+                            rounded-md shadow-sm
+                             placeholder-gray-400   
+                             sm:text-sm"
                   placeholder="you@example.com"
                 />
               </div>
@@ -107,7 +141,7 @@ const handleSubmit = (e) => {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-300"
+                className="block text-sm font-medium text-gray-400"
               >
                 Password
               </label>
@@ -124,7 +158,19 @@ const handleSubmit = (e) => {
                   onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })
                   }
-                  className="block w-full px-3 py-2 pl-10 bg-gray-700 border border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-emerald-400 focus:border-emerald-400 sm:text-sm"
+                  className="block w-full
+                           bg-white
+                             border 
+                             border-gray-300
+                             text-black
+                             p-3
+                             focus:outline-none
+                            focus:ring-2
+                           focus:ring-black 
+                            px-3 py-2 pl-10   
+                            rounded-md shadow-sm
+                             placeholder-gray-400   
+                             sm:text-sm"
                   placeholder="••••••••"
                 />
               </div>
@@ -134,7 +180,7 @@ const handleSubmit = (e) => {
             <div>
               <label
                 htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-300"
+                className="block text-sm font-medium text-gray-400"
               >
                 Confirm Password
               </label>
@@ -154,7 +200,19 @@ const handleSubmit = (e) => {
                       confirmPassword: e.target.value,
                     })
                   }
-                  className="block w-full px-3 py-2 pl-10 bg-gray-700 border border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-emerald-400 focus:border-emerald-400 sm:text-sm"
+                  className="block w-full
+                           bg-white
+                             border 
+                             border-gray-300
+                             text-black
+                             p-3
+                             focus:outline-none
+                            focus:ring-2
+                           focus:ring-black 
+                            px-3 py-2 pl-10   
+                            rounded-md shadow-sm
+                             placeholder-gray-400   
+                             sm:text-sm"
                   placeholder="••••••••"
                 />
               </div>
@@ -163,7 +221,7 @@ const handleSubmit = (e) => {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full flex justify-center py-2 px-4 cursor-pointer border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-400 hover:bg-emerald-600 pointer-cursorfocus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-400 transition duration-150 ease-in-out disabled:opacity-50"
+              className="w-full flex justify-center py-2 px-4 cursor-pointer border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-black hover:bg-gray-600 pointer-cursorfocus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition duration-150 ease-in-out disabled:opacity-50"
               disabled={loading}
             >
               {loading ? (
@@ -181,13 +239,29 @@ const handleSubmit = (e) => {
                 </>
               )}
             </button>
+            <div className="w-full">
+  <button
+    onClick={handleGoogleLogin}
+    className="w-full flex items-center justify-center gap-3 rounded-md bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-700 active:scale-[0.98]"
+  >
+    <img
+      src="https://developers.google.com/identity/images/g-logo.png"
+      alt="Google logo"
+      className="h-5 w-5 rounded-full bg-white p-0.5"
+    />
+
+    <span>Continue with Google</span>
+  </button>
+</div>
+            
+
           </form>
 
           <p className="mt-8 text-center text-sm text-gray-400">
             Already have an account?{" "}
             <Link
               to="/login"
-              className="font-medium text-emerald-400 hover:text-emerald-600"
+              className="font-medium text-gray-600 hover:text-gray-900"
             >
               Login here <ArrowRight className="inline h-4 w-4" />
             </Link>

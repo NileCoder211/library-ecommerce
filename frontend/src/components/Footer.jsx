@@ -1,115 +1,118 @@
-import { Link } from "react-router-dom";
-import { Mail, Phone, MapPin } from "lucide-react";
 
-export default function Footer() {
-  return (
-    <footer className="bg-gray-900 text-gray-400">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* Brand */}
-          <div>
-            <h2 className="text-2xl font-bold text-emerald-400">
-              LegacyScroll
-            </h2>
-            <p className="mt-4 text-sm">
-              Discovering stories that inspire, educate, and ignite imagination.
-            </p>
-          </div>
+import { FaFacebook,FaInstagram,FaTiktok,FaWhatsapp,} from "react-icons/fa";
+import {ArrowUpRight} from "lucide-react";
 
-          {/* Navigation */}
-          <div>
-            <h3 className="text-sm font-semibold text-white uppercase tracking-wider">
-              Navigation
-            </h3>
-            <ul className="mt-4 space-y-2">
-              <li>
-                <Link to="/" className="hover:text-emerald-400">
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link to="/about" className="hover:text-emerald-400">
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link to="/authors" className="hover:text-emerald-400">
-                  Authors
-                </Link>
-              </li>
-              <li>
-                <Link to="/contact" className="hover:text-emerald-400">
-                  Contact
-                </Link>
-              </li>
-            </ul>
-          </div>
+const footerSections = [
+  {
+    title: "Collections",
+    items: ["Sofa", "Beds", "Dining", "Stools", "Wardrobes", "Doors"],
+  },
+  {
+    title: "Experience",
+    items: ["About Us", "Materials", "Sustainability", "Trade Program"],
+  },
+  {
+    title: "Support",
+    items: [ "Track Order","Contact Us", "Shipping & Returns", "FAQ", "Privacy Policy"],
+  },
+];
 
-          {/* Resources */}
-          <div>
-            <h3 className="text-sm font-semibold text-white uppercase tracking-wider">
-              Resources
-            </h3>
-            <ul className="mt-4 space-y-2">
-              <li>
-                <a href="/privacy" className="hover:text-emerald-400">
-                  Privacy Policy
+const Footer = () => (
+  <footer className="bg-[#efeeec] border-t border-gray-200">
+    <div className="max-w-[1440px] mx-auto px-5 md:px-10 lg:px-20 py-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+      {/* Brand */}
+      <div>
+        <h2 className="text-3xl text-black font-serif mb-6">Shamith Furniture</h2>
+        <p className="text-gray-600 mb-6 leading-relaxed">
+          Exquisite craftsmanship for contemporary architectural spaces.
+          Defining luxury since 2010.
+        </p>
+       <div className="flex gap-4">
+  {/* Facebook */}
+  <a
+  href="https://facebook.com/your-page"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="group h-8 w-8 border border-gray-300 rounded flex items-center justify-center hover:bg-blue-600 hover:border-blue-600 transition-colors"
+>
+  <FaFacebook size={22} className="text-gray-700 group-hover:text-white transition-colors" />
+</a>
+
+  {/* TikTok */}
+  <a
+    href="https://tiktok.com/@your-account"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="group h-8 w-8 border border-gray-300 rounded flex items-center justify-center hover:bg-black hover:border-black transition-colors"
+  >
+    <FaTiktok size={20} className="text-gray-700 group-hover:text-white transition-colors" />
+  </a>
+
+  {/* Instagram */}
+  <a
+    href="https://instagram.com/your-account"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="group h-8 w-8 border border-gray-300 rounded flex items-center justify-center hover:bg- hover:bg-gradient-to-tr hover:from-[#FCAF45] hover:via-[#E1306C] hover:to-[#833AB4] hover:border-transparent hover:border-black transition-colors"
+  >
+    <FaInstagram size={22} className="text-gray-700 group-hover:text-white transition-colors" />
+  </a>
+
+  {/* WhatsApp */}
+  <a
+     href="https://wa.me/254700000000"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="group h-8 w-8 border border-gray-300 rounded flex items-center justify-center hover:bg-[#25D366] hover:border-[#25D366] transition-colors"
+>
+  <FaWhatsapp size={22} className="text-gray-700 group-hover:text-white transition-colors" />
+</a>
+</div>
+      </div>
+
+      {/* Link Columns */}
+      {footerSections.map((section) => (
+        <div key={section.title}>
+          <h4 className="uppercase tracking-widest text-black text-sm mb-8 font-semibold">
+            {section.title}
+          </h4>
+          <ul className="space-y-4">
+            {section.items.map((item) => (
+              <li key={item}>
+                 
+
+                <a
+                  href="#"
+      className="group flex items-center justify-between gap-2 text-gray-600 hover:text-[#7c5730] transition-colors border-b border-gray-300 py-2"
+    >
+      {item}
+                  <ArrowUpRight
+        size={14}
+        className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x- transition-all duration-300"
+      />
+                 
                 </a>
               </li>
-              <li>
-                <a href="/terms" className="hover:text-emerald-400">
-                  Terms of Service
-                </a>
-              </li>
-              <li>
-                <a href="/help" className="hover:text-emerald-400">
-                  Help Center
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Contact */}
-          <div>
-            <h3 className="text-sm font-semibold text-white uppercase tracking-wider">
-              Contact
-            </h3>
-            <ul className="mt-4 space-y-3 text-sm">
-              <li className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-emerald-400" />
-                Legacyscrollsinc.com
-              </li>
-              <li className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-emerald-400" />
-                +254 723439603
-              </li>
-              <li className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-emerald-400" />
-                Nairobi, Kenya
-              </li>
-            </ul>
-          </div>
+            ))}
+          </ul>
         </div>
+      ))}
+    </div>
 
-        {/* Bottom */}
-        <div className="mt-10 border-t border-gray-800 pt-6 flex flex-col sm:flex-row justify-between items-center">
-          <p className="text-sm">
-            © {new Date().getFullYear()} LegacyScroll. All rights reserved.
-          </p>
-
-          <div className="flex space-x-6 mt-4 sm:mt-0">
-            <a href="#" className="hover:text-emerald-400">
-              Twitter
-            </a>
-            <a href="#" className="hover:text-emerald-400">
-              LinkedIn
-            </a>
-            <a href="#" className="hover:text-emerald-400">
-              GitHub
-            </a>
-          </div>
+    {/* Bottom bar */}
+    <div className="border-t border-gray-300">
+      <div className="max-w-[1440px] mx-auto px-5 md:px-10 lg:px-20 py-6 flex flex-col md:flex-row justify-between items-center gap-5">
+        <p className="text-sm text-gray-500">
+          © 2026 Shamith Furniture. All rights reserved.
+        </p>
+        <div className="flex gap-6 text-xs tracking-widest text-gray-500">
+          {["MILAN", "PARIS", "NEW YORK", "LONDON"].map((city) => (
+            <span key={city}>{city}</span>
+          ))}
         </div>
       </div>
-    </footer>
-  );
-}
+    </div>
+  </footer>
+);
+
+export default Footer;

@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
-import { Trash, Star } from "lucide-react";
+import { Trash, Star, ToggleLeft, ToggleRight} from "lucide-react";
 import { useProductStore } from "../stores/useProductStore";
 
 const ProductsList = () => {
-	const { deleteProduct, toggleFeaturedProduct, products } = useProductStore();
+	const { deleteProduct, toggleFeaturedProduct, products, updateProductStock } = useProductStore();
 
 	console.log("products", products);
 
@@ -48,6 +48,12 @@ const ProductsList = () => {
 						>
 							Actions
 						</th>
+						<th
+	scope="col"
+	className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider"
+>
+	Stock
+</th>
 					</tr>
 				</thead>
 
@@ -59,7 +65,7 @@ const ProductsList = () => {
 									<div className='flex-shrink-0 h-10 w-10'>
 										<img
 											className='h-10 w-10 rounded-full object-cover'
-											src={product.image}
+											src={product.images?.[0]?.url}
 											alt={product.name}
 										/>
 									</div>
@@ -69,7 +75,7 @@ const ProductsList = () => {
 								</div>
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap'>
-								<div className='text-sm text-gray-300'>${product.price.toFixed(2)}</div>
+								<div className='text-sm text-gray-300'>KES {product.price.toFixed(2)}</div>
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap'>
 								<div className='text-sm text-gray-300'>{product.category}</div>
@@ -92,8 +98,31 @@ const ProductsList = () => {
 									<Trash className='h-5 w-5' />
 								</button>
 							</td>
+
+							<td className="px-6 py-4 whitespace-nowrap">
+	<td className="px-6 py-4 whitespace-nowrap">
+	<button
+		onClick={() =>
+			updateProductStock(
+				product._id,
+				product.stock === 0 ? 1 : 0
+			)
+		}
+		className="transition hover:scale-110"
+		title={product.stock === 0 ? "Set In Stock" : "Set Out of Stock"}
+	>
+		{product.stock === 0 ? (
+			<ToggleLeft className="h-7 w-7 text-gray-500 hover:text-red-500 transition" />
+		) : (
+			<ToggleRight className="h-7 w-7 text-green-500 hover:text-green-400 transition" />
+		)}
+	</button>
+</td>
+</td>
+							
 						</tr>
 					))}
+
 				</tbody>
 			</table>
 		</motion.div>

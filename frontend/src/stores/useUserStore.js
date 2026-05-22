@@ -46,7 +46,7 @@ export const useUserStore = create((set, get) => ({
       );
     }
   },
-
+ 
   checkAuth: async () => {
     set({ checkingAuth: true });
     try {
@@ -56,7 +56,7 @@ export const useUserStore = create((set, get) => ({
       console.log(error.message);
       set({ checkingAuth: false, user: null });
     }
-  },
+  }, 
 
   refreshToken: async () => {
     // Prevent multiple simultaneous refresh attempts

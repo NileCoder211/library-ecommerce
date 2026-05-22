@@ -63,7 +63,7 @@ export const signup = async (req, res, next) => {
   } catch (error) {
     console.log("Error in signup controller", error.message);
     res.status(500).json({ message: error.message });
-	next(error)
+    next(error);
   }
 };
 
@@ -153,5 +153,29 @@ export const getProfile = async (req, res) => {
     res.json(req.user);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+export const googleCallback = async (req, res) => {
+  try {
+    const user = req.user;
+
+    // Generate JWT tokens
+    const { accessToken, refreshToken } = generateTokens(user._id);
+
+    // Store refresh token in Redis
+    await storeRefreshToken(user._id, refreshToken);
+
+    // Set cookies
+    setCookies(res, accessToken, refreshToken);
+
+    // Redirect frontend
+    res.redirect(process.env.CLIENT_URL);
+  } catch (error) {
+    console.log("Google auth controller error", error);
+
+    res.status(500).json({
+      message: "Authentication failed",
+    });
   }
 };
