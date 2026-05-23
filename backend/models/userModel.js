@@ -55,24 +55,16 @@ const userSchema = new mongoose.Schema(
     wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
   },
   {
-    timestamps: true,
-  },
+    timestamps: true },
 );
 
 // Pre-save hook to hash password before saving to database
 userSchema.pre("save", async function () {
   if (!this.password) return;
-
-  if (!this.isModified("password")) return;
-
   const salt = await bcrypt.genSalt(10);
-
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-userSchema.methods.comparePassword = async function (password) {
-	return bcrypt.compare(password, this.password);
-};
 
 const User = mongoose.model("User", userSchema);
 

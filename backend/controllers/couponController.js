@@ -16,6 +16,7 @@ export const getCoupon = async (req, res) => {
       error: error.message,
     });
   }
+  
 };
 
 export const validateCoupon = async (req, res) => {
