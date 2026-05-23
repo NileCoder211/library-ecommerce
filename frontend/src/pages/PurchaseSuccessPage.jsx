@@ -1,43 +1,70 @@
 import { ArrowRight, CheckCircle, HandHeart } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useCartStore } from "../stores/useCartStore";
 import axios from "../lib/axios";
 import Confetti from "react-confetti";
 
 const PurchaseSuccessPage = () => {
+  const [order, setOrder] = useState(null);
   const [isProcessing, setIsProcessing] = useState(true);
-  const { clearCart } = useCartStore();
   const [error, setError] = useState(null);
 
+  const { clearCart } = useCartStore();
+  const [searchParams] = useSearchParams();
+
   useEffect(() => {
-    const handleCheckoutSuccess = async (sessionId) => {
-      try {
-        await axios.post("/payments/checkout-success", {
-          sessionId,
-        });
-        clearCart();
-      } catch (error) {
-        console.log(error);
-      } finally {
-        setIsProcessing(false);
+  const sessionId         = searchParams.get("session_id");
+  const orderId           = searchParams.get("orderId");      // ← M-Pesa passes this
+
+  const loadOrder = async () => {
+    try {
+      let finalOrder;
+
+      if (sessionId) {
+        // Stripe — confirm and get order
+        const res = await axios.post("/orders/checkout-success", { sessionId });
+        finalOrder = res.data.order;
+
+      } else if (orderId) {
+        // ✅ M-Pesa — order already created, just fetch it directly
+        const res = await axios.get(`/orders/${orderId}`);
+        finalOrder = res.data.order;
+
+      } else {
+        throw new Error("No payment reference found");
       }
-    };
 
-    const sessionId = new URLSearchParams(window.location.search).get(
-      "session_id",
-    );
-    if (sessionId) {
-      handleCheckoutSuccess(sessionId);
-    } else {
+      setOrder(finalOrder);
+      clearCart();
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
       setIsProcessing(false);
-      setError("No session ID found in the URL");
     }
-  }, [clearCart]);
+  };
 
-  if (isProcessing) return "Processing...";
+  loadOrder();
+}, [searchParams, clearCart]);
 
-  if (error) return `Error: ${error}`;
+  if (isProcessing) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <p className="text-gray-400 animate-pulse">
+          Confirming your order...
+        </p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <p className="text-red-400">Error: {error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen flex items-center justify-center px-4">
@@ -45,61 +72,66 @@ const PurchaseSuccessPage = () => {
         width={window.innerWidth}
         height={window.innerHeight}
         gravity={0.1}
-        style={{ zIndex: 99 }}
-        numberOfPieces={700}
+        numberOfPieces={600}
         recycle={false}
       />
 
-      <div className="max-w-md w-full bg-gray-800 rounded-lg shadow-xl overflow-hidden relative z-10">
-        <div className="p-6 sm:p-8">
-          <div className="flex justify-center">
-            <CheckCircle className="text-emerald-400 w-16 h-16 mb-4" />
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-center text-emerald-400 mb-2">
-            Purchase Successful!
-          </h1>
+      <div className="bg-white border border-gray-300 rounded-2xl p-8 shadow-lg w-full max-w-md">
+        <div className="flex justify-center">
+          <CheckCircle className="text-emerald-500 w-14 h-14 mb-4" />
+        </div>
 
-          <p className="text-gray-300 text-center mb-2">
-            Thank you for your order. {"We're"} processing it now.
-          </p>
-          <p className="text-emerald-400 text-center text-sm mb-6">
-            Check your email for order details and updates.
-          </p>
-          <div className="bg-gray-700 rounded-lg p-4 mb-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-400">Order number</span>
-              <span className="text-sm font-semibold text-emerald-400">
-                #12345
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-400">Estimated delivery</span>
-              <span className="text-sm font-semibold text-emerald-400">
-                3-5 business days
-              </span>
-            </div>
+        <h1 className="text-2xl font-bold text-emerald-400 text-center mb-2">
+          Purchase Successful!
+        </h1>
+
+        <p className="text-center text-gray-500 mb-6">
+          Thank you for your order
+        </p>
+
+        <div className="bg-gray-100 p-4 rounded-lg space-y-2">
+          <div className="flex justify-between text-gray-500">
+            <span>Order number</span>
+            <span className="font-semibold text-gray-700">
+              {order?.orderNumber || "—"}
+            </span>
           </div>
 
-          <div className="space-y-4">
-            <button
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4
+          <div className="flex justify-between text-gray-500">
+            <span>Total</span>
+            <span className="font-semibold text-gray-700">
+              KES {order?.totalAmount?.toLocaleString("en-KE")}
+            </span>
+          </div>
+
+          <div className="flex justify-between text-gray-500">
+            <span>Delivery</span>
+            <span className="font-semibold text-gray-700">3–5 days</span>
+          </div>
+        </div>
+
+        <div className="mt-6 space-y-3">
+          <Link
+            to="/user-profile"
+            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4
              rounded-lg transition duration-300 flex items-center justify-center"
-            >
-              <HandHeart className="mr-2" size={18} />
-              Thanks for trusting us!
-            </button>
-            <Link
-              to={"/"}
-              className="w-full bg-gray-700 hover:bg-gray-600 text-emerald-400 font-bold py-2 px-4 
+          >
+            <HandHeart className='mr-2' size={22} />
+            View My Orders
+          </Link>
+
+          <Link
+            to="/"
+            className="w-full bg-gray-700 hover:bg-gray-600 text-emerald-400 font-bold py-2 px-4 
             rounded-lg transition duration-300 flex items-center justify-center"
-            >
-              Continue Shopping
-              <ArrowRight className="ml-2" size={18} />
-            </Link>
-          </div>
+          >
+            Continue Shopping
+            <ArrowRight className='ml-2' size={22} />
+          </Link>
         </div>
       </div>
     </div>
   );
 };
+
 export default PurchaseSuccessPage;
