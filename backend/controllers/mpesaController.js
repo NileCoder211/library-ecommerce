@@ -1,6 +1,6 @@
 import Coupon from "../models/couponModel.js";
 import Order from "../models/orderModel.js";
-import PendingOrder from "../models/pendingOrderModel.js";
+import PendingOrder from "../models/pendingorderModel.js";
 import Product from "../models/productModel.js";
 import { generateOrderNumber } from "../lib/generateOrderNumber.js";
 
