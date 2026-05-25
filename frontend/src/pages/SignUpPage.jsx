@@ -29,7 +29,7 @@ const handleSubmit = (e) => {
 
 const handleGoogleLogin = () => {
   window.location.href =
-    "http://localhost:5000/api/auth/google";
+    "https://library-ecommerce.onrender.com/api/auth/google";
 };
 
 
