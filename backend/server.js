@@ -35,7 +35,7 @@ app.use(passport.initialize());
 app.use(express.json({ limit: "10mb" })); // allows you to parse the body of the request
 app.use(cookieParser());
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: "https://library-ecommerce.onrender.com/",
   credentials: true
 }))
 
