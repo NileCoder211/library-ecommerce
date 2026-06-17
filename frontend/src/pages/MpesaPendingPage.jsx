@@ -3,7 +3,8 @@ import { motion } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Smartphone, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import axios from "../lib/axios";
-import { useCartStore } from "../stores/useCartStore";
+import { useClearCart } from "../queries/useCart";
+
 
 const POLL_INTERVAL_MS = 4000;
 const MAX_POLLS = 15;
@@ -11,7 +12,8 @@ const MAX_POLLS = 15;
 const MpesaPendingPage = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const { clearCart } = useCartStore();
+  const clearCartMutation = useClearCart();
+
 
   const { phone, totalAmount, checkoutRequestId } = state || {};
   console.log("checkoutRequestId from state:", checkoutRequestId);
@@ -50,7 +52,7 @@ const MpesaPendingPage = () => {
         if (res.data.success) {
           clearInterval(intervalRef.current);
           setStatus("success");
-          await clearCart();
+          clearCartMutation.mutate();
           setTimeout(
             () =>  navigate(`/purchase-success?orderId=${res.data.orderId}`),
             1500
@@ -76,7 +78,7 @@ const MpesaPendingPage = () => {
         console.warn("Poll error (will retry):", err.message);
       }
     }, POLL_INTERVAL_MS);
-  }, [checkoutRequestId, clearCart, navigate]);
+  }, [checkoutRequestId, clearCartMutation.mutate, navigate]);
 
   useEffect(() => {
     if (!checkoutRequestId) {

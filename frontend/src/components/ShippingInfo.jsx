@@ -105,6 +105,8 @@ const ShippingAddressForm = ({ shippingAddress, setShippingAddress }) => {
             <User size={18} className="text-gray-400" />
 
             <input
+              name="fullName"
+              autoComplete="name"  
               type="text"
               placeholder="John Mwangi"
               value={shippingAddress.fullName}
@@ -132,6 +134,8 @@ const ShippingAddressForm = ({ shippingAddress, setShippingAddress }) => {
             <Phone size={18} className="text-gray-400" />
 
             <input
+              name="phoneNumber"
+              autoComplete="tel"  
               type="tel"
               placeholder="0712 345 678"
               value={shippingAddress.phoneNumber}
@@ -159,6 +163,7 @@ const ShippingAddressForm = ({ shippingAddress, setShippingAddress }) => {
             <MapPin size={18} className="text-gray-400" />
 
             <select
+              name="county"
               value={shippingAddress.county}
               onChange={(e) =>
                 handleChange("county", e.target.value)
@@ -194,6 +199,8 @@ const ShippingAddressForm = ({ shippingAddress, setShippingAddress }) => {
             <Home size={18} className="text-gray-400" />
 
             <input
+              name="area"
+              autoComplete="address-level3"
               type="text"
               placeholder="South B"
               value={shippingAddress.area}
@@ -221,6 +228,8 @@ const ShippingAddressForm = ({ shippingAddress, setShippingAddress }) => {
             <Building2 size={18} className="text-gray-400" />
 
             <input
+              name="houseNumber"
+              autoComplete="address-line2"
               type="text"
               placeholder="Apartment B12"
               value={shippingAddress.houseNumber}
@@ -242,6 +251,8 @@ const ShippingAddressForm = ({ shippingAddress, setShippingAddress }) => {
             <Landmark size={18} className="text-gray-400" />
 
             <input
+              name="landmark"
+              autoComplete="off"
               type="text"
               placeholder="Near Quickmart / opposite Shell station"
               value={shippingAddress.landmark}

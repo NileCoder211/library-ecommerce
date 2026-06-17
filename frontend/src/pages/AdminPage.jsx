@@ -15,7 +15,7 @@ import CreateProductForm from "../components/CreateProductForm";
 import ProductsList from "../components/ProductsList";
 import OrdersTab from "../components/OrdersTab";
 
-import { useProductStore } from "../stores/useProductStore";
+import  {useProductStore}  from "../stores/useProductStore";
 
 const tabs = [
   {
@@ -152,7 +152,6 @@ const AdminPage = () => {
         </div>
       </aside>
 
-      {/* MAIN CONTENT */}
       {/* MAIN CONTENT */}
 <div className="flex-1 flex flex-col min-h-screen lg:ml-72">
         {/* MOBILE TOPBAR */}

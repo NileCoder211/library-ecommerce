@@ -26,7 +26,7 @@ export default function FAQ() {
 
   return (
     <div className="max-w-5xl mx-auto p-6">
-      <h1 className="flex justify-center item-center font-bold text-5xl mb-10 text-emerald-400">Frequently Ask Questions</h1>
+      <h1 className="flex justify-center item-center font-bold text-5xl mb-10 text-gray-700">Frequently Ask Questions</h1>
       <div className="grid md:grid-cols-2 gap-8 items-start">
         {/* Left Image */}
         <div className="w-full">
@@ -39,7 +39,7 @@ export default function FAQ() {
 
         {/* FAQ Section */}
         <div>
-          <h2 className="text-2xl font-bold mb-4">FAQs</h2>
+          <h2 className="text-2xl font-bold mb-4 text-gray-500">FAQs</h2>
           <div className="space-y-3">
             {faqs.map((faq, index) => {
               const isOpen = openIndex === index;
@@ -47,12 +47,12 @@ export default function FAQ() {
                 <motion.div
                   key={index}
                   layout
-                  className="border cursor-pointer rounded-2xl p-4 shadow-sm"
+                  className="border border-gray-300 cursor-pointer rounded-2xl p-4 shadow-sm"
                   transition={{ layout: { duration: 0.25 } }}
                 >
                   <button
                     onClick={() => toggleFAQ(index)}
-                    className="w-full flex justify-between items-center cursor-pointer text-left"
+                    className="w-full flex justify-between items-center text-gray-400 cursor-pointer text-left"
                   >
                     <span className="font-medium">{faq.question}</span>
                     <motion.span
@@ -78,7 +78,7 @@ export default function FAQ() {
                         transition={{ duration: 0.25, ease: "easeInOut" }}
                         className="overflow-hidden"
                       >
-                        <p className="mt-3 text-gray-400">{faq.answer}</p>
+                        <p className="mt-3 font-bold text-gray-500">{faq.answer}</p>
                       </motion.div>
                     )}
                   </AnimatePresence>

@@ -48,7 +48,7 @@ const FeaturedProducts = ({ featuredProducts }) => {
               className="flex transition-transform duration-300 ease-in-out"
               style={{
                 transform: `translateX(-${
-                  currentIndex * (100 / itemsPerPage)
+                  currentIndex * (100 / itemsPerPage) 
                 }%)`,
               }}
             >

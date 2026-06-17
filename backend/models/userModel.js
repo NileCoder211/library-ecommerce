@@ -20,17 +20,19 @@ const userSchema = new mongoose.Schema(
       select: false,
     },
     cartItems: [
-      {
-        quantity: {
-          type: Number,
-          default: 1,
-        },
-        product: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Product",
-        },
-      },
-    ],
+  {
+    productId: {                                    // ← was `product`
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+      required: true,
+    },
+    quantity: {
+      type: Number,
+      default: 1,
+      min: 1,
+    },
+  },
+],
     role: {
       type: String,
       enum: ["customer", "admin"],
@@ -62,9 +64,13 @@ const userSchema = new mongoose.Schema(
 userSchema.pre("save", async function () {
   if (!this.password) return;
   const salt = await bcrypt.genSalt(10);
+
   this.password = await bcrypt.hash(this.password, salt);
 });
 
+userSchema.methods.comparePassword = async function (password) {
+	return bcrypt.compare(password, this.password);
+};
 
 const User = mongoose.model("User", userSchema);
 

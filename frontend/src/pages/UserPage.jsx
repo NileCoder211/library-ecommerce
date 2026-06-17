@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
-import { useWishlistStore } from "../stores/useWishlistStore";
+import { useWishlist } from "../queries/useWishlist";
+import { useUserStore } from "../stores/useUserStore";
+import ProductCard from "../components/ProductCard";
 
 import {
   Package,
@@ -19,8 +21,7 @@ import {
   Trash2
 } from "lucide-react";
 
-import { useUserStore } from "../stores/useUserStore";
-import { useOrderStore } from "../stores/useOrderStore";
+import { useUserOrders, useCancelOrder } from "../queries/useOrder";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // STATUS CONFIG
@@ -224,7 +225,8 @@ const ProfileSection = ({ user }) => (
 // ─────────────────────────────────────────────────────────────────────────────
 const OrderCard = ({ order, cancelOrder }) => {
   const [expanded, setExpanded] = useState(false);
-
+   console.log("payment method:", order.paymentMethod);
+  console.log("products[0]:", order.products?.[0]);
   const status =
     STATUS_CONFIG[order.orderStatus] ||
     STATUS_CONFIG.pending;
@@ -240,20 +242,20 @@ const OrderCard = ({ order, cancelOrder }) => {
         className="p-6 flex items-center gap-6 cursor-pointer"
         onClick={() => setExpanded(!expanded)}
       >
-        {/* Image */}
-        <div className="w-20 h-20 rounded-lg bg-gray-50 overflow-hidden flex-shrink-0 border border-gray-100">
-          {order.products?.[0]?.image ? (
-            <img
-              src={order.products[0].image}
-              alt={order.products[0].name}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Package size={24} className="text-gray-300" />
-            </div>
-          )}
-        </div>
+       {/* Header image */}
+<div className="w-20 h-20 rounded-lg bg-gray-50 overflow-hidden flex-shrink-0 border border-gray-100">
+  {(order.products?.[0]?.image || order.products?.[0]?.product?.images?.[0]?.url) ? (
+    <img
+      src={order.products[0].image || order.products[0].product?.images?.[0]?.url}
+      alt={order.products[0].name || order.products[0].product?.name}
+      className="w-full h-full object-cover"
+    />
+  ) : (
+    <div className="w-full h-full flex items-center justify-center">
+      <Package size={24} className="text-gray-300" />
+    </div>
+  )}
+</div>
 
         {/* Info */}
         <div className="flex-1 min-w-0">
@@ -323,11 +325,17 @@ const OrderCard = ({ order, cancelOrder }) => {
                 className="flex items-center justify-between gap-4 bg-white border border-gray-100 rounded-lg p-4"
               >
                 <div className="flex items-center gap-4">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-16 h-16 object-cover rounded-md"
-                  />
+                  {/* Expanded product list */}
+<img
+  src={item.image || item.product?.images?.[0]?.url}
+  alt={item.name || item.product?.name}
+  className="w-16 h-16 object-cover rounded-md"
+/>
+
+{/* Product name */}
+<h4 className="text-sm font-semibold text-black">
+  {item.name || item.product?.name}
+</h4>
 
                   <div>
                     <h4 className="text-sm font-semibold text-black">
@@ -542,56 +550,35 @@ const OrdersSection = ({
 // SAVED PIECES SECTION
 // ─────────────────────────────────────────────────────────────────────────────
 
+
+
 const SavedPiecesSection = () => {
-  const {
-    wishlist,
-    loading,
-    fetchWishlist,
-    toggleLike,
-  } = useWishlistStore();
+  const { user } = useUserStore();
+  const { data: wishlist = [], isLoading } = useWishlist(!!user);
 
-  useEffect(() => {
-    fetchWishlist();
-  }, [fetchWishlist]);
-
-  // Loading state
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="font-serif text-3xl text-black mb-1">
-            Saved Pieces
-          </h2>
-
-          <p className="text-sm text-gray-500">
-            Your curated furniture collection.
-          </p>
+          <h2 className="font-serif text-3xl text-black mb-1">Saved Pieces</h2>
+          <p className="text-sm text-gray-500">Your curated furniture collection.</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-80 rounded-2xl bg-gray-100 animate-pulse"
-            />
+            <div key={i} className="h-80 rounded-2xl bg-gray-100 animate-pulse" />
           ))}
         </div>
       </div>
     );
   }
 
-  // Empty state
   if (wishlist.length === 0) {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="font-serif text-3xl text-black mb-1">
-            Saved Pieces
-          </h2>
-
-          <p className="text-sm text-gray-500">
-            Your curated furniture collection.
-          </p>
+          <h2 className="font-serif text-3xl text-black mb-1">Saved Pieces</h2>
+          <p className="text-sm text-gray-500">Your curated furniture collection.</p>
         </div>
 
         <div className="bg-white border border-gray-100 rounded-2xl py-20 px-6 text-center">
@@ -599,12 +586,9 @@ const SavedPiecesSection = () => {
             <Heart size={28} className="text-gray-300" />
           </div>
 
-          <h3 className="text-lg font-semibold text-black mb-2">
-            No saved pieces yet
-          </h3>
-
+          <h3 className="text-lg font-semibold text-black mb-2">No saved pieces yet</h3>
           <p className="text-sm text-gray-500 max-w-sm mx-auto">
-            Save furniture pieces you love and they’ll appear here.
+            Save furniture pieces you love and they'll appear here.
           </p>
         </div>
       </div>
@@ -615,83 +599,21 @@ const SavedPiecesSection = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="font-serif text-3xl text-black mb-1">
-          Saved Pieces
-        </h2>
-
+        <h2 className="font-serif text-3xl text-black mb-1">Saved Pieces</h2>
         <p className="text-sm text-gray-500">
-          {wishlist.length} saved item
-          {wishlist.length > 1 ? "s" : ""}
+          {wishlist.length} saved item{wishlist.length > 1 ? "s" : ""}
         </p>
       </div>
 
       {/* Products Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
         {wishlist.map((product) => (
-          <div
-            key={product._id}
-            className="group bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-300"
-          >
-            {/* Image */}
-            <Link to={`/product/${product._id}`}>
-              <div className="relative overflow-hidden bg-gray-50">
-                <img
-                  src={product.images?.[0]?.url}
-                  alt={product.name}
-                  className="w-full h-72 object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-
-                {/* Remove Button */}
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    toggleLike(product);
-                  }}
-                  className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm hover:bg-red-50 transition"
-                >
-                  <Trash2
-                    size={18}
-                    className="text-red-500"
-                  />
-                </button>
-              </div>
-            </Link>
-
-            {/* Content */}
-            <div className="p-5">
-              <div className="mb-3">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-gray-400 mb-2">
-                  {product.category}
-                </p>
-
-                <h3 className="font-serif text-lg text-black line-clamp-1">
-                  {product.name}
-                </h3>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <p className="text-base font-semibold text-black">
-                  KES{" "}
-                  {Number(product.price).toLocaleString(
-                    "en-KE"
-                  )}
-                </p>
-
-                <Link
-                  to={`/product/${product._id}`}
-                  className="text-xs uppercase tracking-widest text-black hover:text-gray-500 transition"
-                >
-                  View
-                </Link>
-              </div>
-            </div>
-          </div>
+          <ProductCard key={product._id} product={product} />
         ))}
       </div>
     </div>
   );
 };
-
 
 
 
@@ -704,34 +626,24 @@ const SavedPiecesSection = () => {
 const UserProfilePage = () => {
   const { user, logout } = useUserStore();
 
-  const {
-    orders,
-    loading,
-    fetchUserOrders,
-    cancelOrder,
-  } = useOrderStore();
+  const { data: orders = [], isLoading: loading } = useUserOrders(!!user);
+  console.log("orders from React Query:", orders); // ← add temporarily
+  const cancelOrderMutation = useCancelOrder();
 
   const navigate = useNavigate();
 
   const [active, setActive] = useState("profile");
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  useEffect(() => {
-    fetchUserOrders();
-  }, [fetchUserOrders]);
-
+ 
   const handleLogout = async () => {
     await logout();
     navigate("/login");
   };
 
-  const handleCancelOrder = async (orderId) => {
-    const res = await cancelOrder(orderId);
-
-    if (res?.success) {
-      toast.success("Order cancelled");
-    }
-  };
+ const handleCancelOrder = (orderId) => {
+  cancelOrderMutation.mutate(orderId);
+};
 
   const renderContent = () => {
     switch (active) {

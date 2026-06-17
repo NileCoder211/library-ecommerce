@@ -1,41 +1,25 @@
 import { ArrowRight, CheckCircle, HandHeart } from "lucide-react";
-import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import Confetti from "react-confetti";
+import { useQuery } from "@tanstack/react-query";
 import axios from "../lib/axios";
+import Confetti from "react-confetti";
 
 const MpesaSuccessPage = () => {
   const [searchParams] = useSearchParams();
-  const [order, setOrder] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-
   const orderId = searchParams.get("orderId");
 
-  useEffect(() => {
-    if (!orderId) {
-      setError("No order ID found.");
-      setIsLoading(false);
-      return;
-    }
-
-    const fetchOrder = async () => {
-      try {
-        const res = await axios.get(`/mpesa/order/${orderId}`);
-        setOrder(res.data);
-      } catch (err) {
-        console.error(err);
-        // Non-critical — page still works without order details
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchOrder();
-  }, [orderId]);
+  const { data: order, isLoading, isError } = useQuery({
+    queryKey: ["order", orderId],
+    queryFn: async () => {
+       const res = await axios.get(`/orders/${orderId}`);
+      return res.data;
+    },
+    enabled: !!orderId,
+  });
 
   if (isLoading) return "Loading...";
-  if (error) return `Error: ${error}`;
+  if (isError) return "Error loading order.";
+
 
   return (
     <div className="h-screen flex items-center justify-center px-4">

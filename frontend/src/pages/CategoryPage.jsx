@@ -1,19 +1,13 @@
-import { useEffect } from "react";
-import { useProductStore } from "../stores/useProductStore";
 import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import ProductCard from "../components/ProductCard";
+import { useProductsByCategory } from "../queries/useProduct";
 
 const CategoryPage = () => {
-  const { fetchProductsByCategory, products } = useProductStore();
-
   const { category } = useParams();
 
-  useEffect(() => {
-    fetchProductsByCategory(category);
-  }, [fetchProductsByCategory, category]);
+  const { data: products = [], isLoading } = useProductsByCategory(category);
 
-  console.log("products:", products);
   return (
     <div className="min-h-screen">
       <div className="relative z-10 max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -32,13 +26,19 @@ const CategoryPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          {products?.length === 0 && (
+          {isLoading && (
+            <p className="text-gray-500 text-center col-span-full">
+              Loading...
+            </p>
+          )}
+
+          {!isLoading && products.length === 0 && (
             <h2 className="text-3xl font-semibold text-gray-500 text-center col-span-full">
               No products found
             </h2>
           )}
 
-          {products?.map((product) => (
+          {products.map((product) => (
             <ProductCard key={product._id} product={product} />
           ))}
         </motion.div>
@@ -46,4 +46,5 @@ const CategoryPage = () => {
     </div>
   );
 };
+
 export default CategoryPage;

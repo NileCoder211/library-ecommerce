@@ -1,30 +1,49 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { useCartStore } from "../stores/useCartStore";
+import { toast } from "react-hot-toast";  // ✅ correct
+import axios from "../lib/axios";          // ✅ added
 
-const GiftCouponCard = () => {
+
+const GiftCouponCard = ({ coupon, setCoupon, isCouponApplied, setIsCouponApplied }) => {
   const [userInputCode, setUserInputCode] = useState("");
-  const { coupon, isCouponApplied, applyCoupon, getMyCoupon, removeCoupon } =
-    useCartStore();
 
+  // fetch user's available coupon on mount
   useEffect(() => {
+    const getMyCoupon = async () => {
+      try {
+        const res = await axios.get("/coupons");
+        setCoupon(res.data);
+      } catch (error) {
+        console.error("Error fetching coupon:", error);
+      }
+    };
     getMyCoupon();
-  }, [getMyCoupon]);
+  }, []);
 
   useEffect(() => {
     if (coupon) setUserInputCode(coupon.code);
   }, [coupon]);
 
-  const handleApplyCoupon = () => {
+  const handleApplyCoupon = async () => {
     if (!userInputCode) return;
-    applyCoupon(userInputCode);
+    try {
+      const res = await axios.post("/coupons/validate", { code: userInputCode });
+      setCoupon(res.data);
+      setIsCouponApplied(true);
+      toast.success("Coupon applied successfully");
+    } catch (err) {
+      toast.error(err.response?.data?.message ||  err?.message  || "Invalid coupon code");
+    }
   };
 
-  const handleRemoveCoupon = async () => {
-    await removeCoupon();
+  const handleRemoveCoupon = () => {
+    setCoupon(null);
+    setIsCouponApplied(false);
     setUserInputCode("");
+    toast.success("Coupon removed");
   };
-
+  
+  
   return (
     <motion.div
       className=" bg-[#fcfcfc]

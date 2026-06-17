@@ -240,6 +240,8 @@ export const mpesaCallback = async (req, res) => {
         product: p.product || p.id,
         quantity: p.quantity,
         price: p.price,
+        name: p?.name,                    
+        image: p?.images?.[0]?.url,   
       })),
       totalAmount: pending.totalAmount,
       paymentMethod: "mpesa",
