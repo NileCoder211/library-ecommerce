@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "react-hot-toast";
 import { PlusCircle, Upload, Loader, X } from "lucide-react";
-import { useProductStore } from "../stores/useProductStore";
+import { useCreateProduct } from "../queries/useProduct";
 
 const categories = [
   "sofa",
@@ -21,28 +21,21 @@ const CreateProductForm = () => {
     name: "",
     description: "",
     price: "",
+    stock: "", 
     category: "",
     images: [],
   });
 
-  const { createProduct, loading } = useProductStore();
+  const createProductMutation = useCreateProduct();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const result = await createProduct(newProduct);
-      // Support both: stores that return { success } and stores that throw on failure
-      if (result && result.success === false) {
-        toast.error("Failed to create product. Please try again.");
-        return;
-      }
-      toast.success("Product created successfully!");
-      setNewProduct({ name: "", description: "", price: "", category: "", images: [] });
-    } catch (error) {
-      console.error("Error creating a product:", error);
-      toast.error("Failed to create product. Please try again.");
-    }
-  };
+  const handleSubmit = (e) => {
+  e.preventDefault();
+  createProductMutation.mutate(newProduct, {
+    onSuccess: () => {
+      setNewProduct({ name: "", description: "", price: "",  stock: "", category: "", images: [] });
+    },
+  });
+};
 
   const handleImageChange = async (e) => {
     const files = Array.from(e.target.files);
@@ -182,6 +175,31 @@ const CreateProductForm = () => {
           />
         </div>
 
+        {/* Stock */}
+<div>
+  <label
+    htmlFor="stock"
+    className="block text-sm font-medium text-gray-300"
+  >
+    Stock Quantity
+  </label>
+  <input
+    type="number"
+    id="stock"
+    name="stock"
+    value={newProduct.stock}
+    onChange={(e) =>
+      setNewProduct({ ...newProduct, stock: e.target.value })
+    }
+    step="1"
+    min="0"
+    className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm 
+    py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500
+     focus:border-emerald-500"
+    required
+  />
+</div>
+
         {/* Category */}
         <div>
           <label
@@ -314,9 +332,9 @@ const CreateProductForm = () => {
           className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md 
 					shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 
 					focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50"
-          disabled={loading}
-        >
-          {loading ? (
+          disabled={createProductMutation.isPending}
+          >
+{createProductMutation.isPending ? (
             <>
               <Loader className="mr-2 h-5 w-5 animate-spin" aria-hidden="true" />
               Loading...

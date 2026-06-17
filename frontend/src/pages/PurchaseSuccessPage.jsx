@@ -1,7 +1,7 @@
 import { ArrowRight, CheckCircle, HandHeart } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { useCartStore } from "../stores/useCartStore";
+import {useClearCart} from "../queries/useCart";
 import axios from "../lib/axios";
 import Confetti from "react-confetti";
 
@@ -10,43 +10,39 @@ const PurchaseSuccessPage = () => {
   const [isProcessing, setIsProcessing] = useState(true);
   const [error, setError] = useState(null);
 
-  const { clearCart } = useCartStore();
+  const clearCartMutation = useClearCart(); // ← replaces useCartStore
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
-  const sessionId         = searchParams.get("session_id");
-  const orderId           = searchParams.get("orderId");      // ← M-Pesa passes this
+    const sessionId = searchParams.get("session_id");
+    const orderId = searchParams.get("orderId");
 
-  const loadOrder = async () => {
-    try {
-      let finalOrder;
+    const loadOrder = async () => {
+      try {
+        let finalOrder;
 
-      if (sessionId) {
-        // Stripe — confirm and get order
-        const res = await axios.post("/orders/checkout-success", { sessionId });
-        finalOrder = res.data.order;
+        if (sessionId) {
+          const res = await axios.post("/orders/checkout-success", { sessionId });
+          finalOrder = res.data.order;
+        } else if (orderId) {
+          const res = await axios.get(`/orders/${orderId}`);
+          finalOrder = res.data.order;
+        } else {
+          throw new Error("No payment reference found");
+        }
 
-      } else if (orderId) {
-        // ✅ M-Pesa — order already created, just fetch it directly
-        const res = await axios.get(`/orders/${orderId}`);
-        finalOrder = res.data.order;
-
-      } else {
-        throw new Error("No payment reference found");
+        setOrder(finalOrder);
+        clearCartMutation.mutate(); // ← replaces clearCart()
+      } catch (err) {
+        console.error(err);
+        setError(err.message);
+      } finally {
+        setIsProcessing(false);
       }
+    };
 
-      setOrder(finalOrder);
-      clearCart();
-    } catch (err) {
-      console.error(err);
-      setError(err.message);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  loadOrder();
-}, [searchParams, clearCart]);
+    loadOrder();
+  }, [searchParams]); // ← clearCart removed from dependencies
 
   if (isProcessing) {
     return (

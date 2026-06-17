@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useCartStore } from "../stores/useCartStore";
 import { Link, useNavigate } from "react-router-dom";
 import { MoveRight, X, CreditCard, Smartphone, CheckCircle2 } from "lucide-react";
-import axios from "../lib/axios";
-import { toast } from "react-hot-toast";
+import { useCreateStripeOrder, useCreateMpesaOrder } from "../queries/useOrder";
+import toast from "react-hot-toast";
+import { useCart } from "../queries/useCart";
 
 const PAYMENT_METHODS = [
   {
@@ -269,29 +269,30 @@ const MpesaPhoneModal = ({ isOpen, onClose, onConfirm, isLoading }) => {
   );
 };
 
-// ─── Main Component ───────────────────────────────────────────────────────────
-const OrderSummary = ({shippingAddress, isShippingValid }) => {
-  const { total, subtotal, coupon, isCouponApplied, cart } = useCartStore();
+
+const OrderSummary = ({ shippingAddress, isShippingValid, coupon, isCouponApplied }) => {
+  const { data: cart = [] } = useCart();
   const navigate = useNavigate();
 
   const [showMethodModal, setShowMethodModal] = useState(false);
   const [showMpesaModal, setShowMpesaModal] = useState(false);
-  const [mpesaLoading, setMpesaLoading] = useState(false);
 
+  // ── Compute totals from cart ──────────────────────────────────────────────
+  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  // apply coupon discount if needed
+  const discount = coupon && isCouponApplied
+    ? (subtotal * coupon.discountPercentage) / 100
+    : 0;
+
+  const total = subtotal - discount;
   const savings = subtotal - total;
+
+  const formattedSubtotal = Number(subtotal).toLocaleString("en-KE", { maximumFractionDigits: 0 });
+  const formattedTotal = Number(total).toLocaleString("en-KE", { maximumFractionDigits: 0 });
+  const formattedSavings = Number(savings).toLocaleString("en-KE", { maximumFractionDigits: 0 });
+
   
- const formattedSubtotal = Number(subtotal).toLocaleString("en-KE", {
-  maximumFractionDigits: 0,
-});
-
-const formattedTotal = Number(total).toLocaleString("en-KE", {
-  maximumFractionDigits: 0,
-});
-
-const formattedSavings = Number(savings).toLocaleString("en-KE", {
-  maximumFractionDigits: 0,
-});
-
   const handleMethodSelect = (method) => {
     setShowMethodModal(false);
     if (method === "stripe") {
@@ -301,57 +302,36 @@ const formattedSavings = Number(savings).toLocaleString("en-KE", {
     }
   };
 
-  // ── Stripe ──────────────────────────────────────────────────────────────────
- const handleStripePayment = async () => {
-  try {
-    const res = await axios.post(
-      "/payments/create-checkout-session",
-      {
-        products: cart,
-        couponCode: coupon ? coupon.code : null,
-        shippingAddress,
-      }
-    );
+  // ── Stripe ───────────────────────────────────────────────────────────────────
 
-    window.location.href = res.data.url;
-  } catch (error) {
-    console.error("Stripe checkout error:", error);
-    toast.error( error.response?.data?.message || "Failed to initiate payment. Please try again.");
-  }
+const createStripeMutation = useCreateStripeOrder();
+const createMpesaMutation = useCreateMpesaOrder();
+
+// then replace handleStripePayment
+const handleStripePayment = () => {
+  createStripeMutation.mutate(
+    { products: cart, couponCode: coupon?.code ?? null, shippingAddress },
+    { onSuccess: (data) => { window.location.href = data.url; } }
+  );
 };
 
-
-// ── M-Pesa ──────────────────────────────────────────────────────────────────
-const handleMpesaPayment = async (phone) => {
-  setMpesaLoading(true);
-
-  try {
-    const res = await axios.post("/mpesa/stkpush", {
-      phone,
-      products: cart,
-      couponCode: coupon ? coupon.code : null,
-       shippingAddress,
-    });
-
-    setShowMpesaModal(false);
-
-    navigate("/mpesa-pending", {
-      state: {
-        phone,
-        totalAmount: res.data.totalAmount,
-        checkoutRequestId: res.data.CheckoutRequestID,
+// and handleMpesaPayment
+const handleMpesaPayment = (phone) => {
+  createMpesaMutation.mutate(
+    { phone, products: cart, couponCode: coupon?.code ?? null, shippingAddress },
+    {
+      onSuccess: (data) => {
+        setShowMpesaModal(false);
+        navigate("/mpesa-pending", {
+          state: {
+            phone,
+            totalAmount: data.totalAmount,
+            checkoutRequestId: data.CheckoutRequestID,
+          },
+        });
       },
-    });
-  } catch (error) {
-    console.error("M-Pesa STK error:", error);
-
-    toast.error(
-      error.response?.data?.message ||
-      "Failed to send STK push. Please try again."
-    );
-  } finally {
-    setMpesaLoading(false);
-  }
+    }
+  );
 };
 
   return (
@@ -448,7 +428,7 @@ const handleMpesaPayment = async (phone) => {
         isOpen={showMpesaModal}
         onClose={() => setShowMpesaModal(false)}
         onConfirm={handleMpesaPayment}
-        isLoading={mpesaLoading}
+         isLoading={createMpesaMutation.isPending}
       />
     </>
   );

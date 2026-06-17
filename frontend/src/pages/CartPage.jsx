@@ -1,33 +1,52 @@
-import {useState} from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useCartStore } from "../stores/useCartStore";
+
 import { motion } from "framer-motion";
 import { ShoppingCart } from "lucide-react";
+
+import { useCart } from "../queries/useCart";
+import {useUserStore} from "../stores/useUserStore"
+
 import CartItem from "../components/CartItem";
 import PeopleAlsoBought from "../components/PeopleAlsoBought";
 import OrderSummary from "../components/OrderSummary";
 import GiftCouponCard from "../components/GiftCouponCard";
-import Footer from "../components/Footer"
+import Footer from "../components/Footer";
 import ShippingAddressForm from "../components/ShippingInfo";
 
 const CartPage = () => {
-  const { cart } = useCartStore();
+  const { user } = useUserStore();
+  // React Query cart
+  const { data = [], error, isLoading } = useCart(!!user);
+  const [shippingAddress, setShippingAddress] =
+    useState({
+      fullName: "",
+      phoneNumber: "",
+      county: "",
+      city: "",
+      area: "",
+      landmark: "",
+      houseNumber: "",
+    });
+    
+  const isShippingValid =
+    shippingAddress.fullName.trim() &&
+    shippingAddress.phoneNumber.trim() &&
+    shippingAddress.county.trim() &&
+    shippingAddress.area.trim();
 
-  const [shippingAddress, setShippingAddress] = useState({
-  fullName: "",
-  phoneNumber: "",
-  county: "",
-  city: "",
-  area: "",
-  landmark: "",
-  houseNumber: "",
-});
 
-const isShippingValid =
-  shippingAddress.fullName.trim() &&
-  shippingAddress.phoneNumber.trim() &&
-  shippingAddress.county.trim() &&
-  shippingAddress.area.trim();
+     const [coupon, setCoupon] = useState(null);           // ← add
+     const [isCouponApplied, setIsCouponApplied] = useState(false); // ← add
+
+  // Optional loading state
+  if (isLoading) {
+    return (
+      <div className="py-20 text-center text-black">
+        Loading cart...
+      </div>
+    );
+  }
 
   return (
     <div className="py-2 md:py-2">
@@ -37,53 +56,75 @@ const isShippingValid =
             className="mx-auto w-full flex-none lg:max-w-2xl xl:max-w-4xl"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            transition={{
+              duration: 0.5,
+              delay: 0.2,
+            }}
           >
-            {cart.length === 0 ? (
+            {data.length === 0 ? (
               <EmptyCartUI />
             ) : (
               <div className="space-y-6">
-                {cart.map((item) => (
-                  <CartItem key={item._id} item={item} />
+                {data.map((item) => (
+                  <CartItem
+                    key={item._id}
+                    item={item}
+                  />
                 ))}
               </div>
             )}
-            {cart.length > 0 && (
-              
-  <div className=" py-4">
-    <ShippingAddressForm
-      shippingAddress={shippingAddress}
-      setShippingAddress={setShippingAddress}
-    />
 
-    <PeopleAlsoBought />
-  </div>
-)}
+            {data.length > 0 && (
+              <div className="py-4">
+                <ShippingAddressForm
+                  shippingAddress={
+                    shippingAddress
+                  }
+                  setShippingAddress={
+                    setShippingAddress
+                  }
+                />
+
+                <PeopleAlsoBought />
+              </div>
+            )}
           </motion.div>
 
-          {cart.length > 0 && (
+          {data.length > 0 && (
             <motion.div
               className="mx-auto mt-6 max-w-4xl flex-1 space-y-6 lg:mt-0 lg:w-full"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
+              transition={{
+                duration: 0.5,
+                delay: 0.4,
+              }}
             >
               <OrderSummary
-  shippingAddress={shippingAddress}
-  isShippingValid={isShippingValid}
-/>
-              <GiftCouponCard />
+                shippingAddress={shippingAddress}
+                isShippingValid={isShippingValid}
+                coupon={coupon}                        // ← pass down
+                isCouponApplied={isCouponApplied}      // ← pass down
+              />
+
+              <GiftCouponCard
+                coupon={coupon}                        // ← pass down
+                setCoupon={setCoupon}                  // ← pass down
+                isCouponApplied={isCouponApplied}      // ← pass down
+                setIsCouponApplied={setIsCouponApplied} // ← pass down
+               />
             </motion.div>
           )}
         </div>
       </div>
+
       <div className="pt-20">
         <Footer />
       </div>
-      
     </div>
   );
 };
+
 export default CartPage;
 
 const EmptyCartUI = () => (
@@ -94,10 +135,16 @@ const EmptyCartUI = () => (
     transition={{ duration: 0.5 }}
   >
     <ShoppingCart className="h-24 w-24 text-black" />
-    <h3 className="text-2xl font-semibold text-gray-700 ">Your cart is empty</h3>
+
+    <h3 className="text-2xl font-semibold text-gray-700">
+      Your cart is empty
+    </h3>
+
     <p className="text-gray-500">
-      Looks like you {"haven't"} added anything to your cart yet.
+      Looks like you haven't added anything to
+      your cart yet.
     </p>
+
     <Link
       className="mt-4 rounded-md bg-black hover:border-2 hover:border-black px-6 py-2 text-white transition-colors hover:bg-white hover:text-black hover:font-bold hover:text-lg"
       to="/"

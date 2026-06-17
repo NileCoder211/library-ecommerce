@@ -3,13 +3,9 @@ import User from "../models/userModel.js";
 import jwt from "jsonwebtoken";
 
 const generateTokens = (userId) => {
-  const accessToken = jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: "15m",
-  });
+  const accessToken = jwt.sign( { userId }, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "15m",});
 
-  const refreshToken = jwt.sign({ userId }, process.env.REFRESH_TOKEN_SECRET, {
-    expiresIn: "7d",
-  });
+  const refreshToken = jwt.sign({ userId }, process.env.REFRESH_TOKEN_SECRET, {  expiresIn: "7d", });
 
   return { accessToken, refreshToken };
 };
@@ -62,8 +58,7 @@ export const signup = async (req, res, next) => {
     });
   } catch (error) {
     console.log("Error in signup controller", error.message);
-    res.status(500).json({ message: error.message });
-    next(error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
