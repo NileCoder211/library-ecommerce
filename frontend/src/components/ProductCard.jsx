@@ -5,7 +5,6 @@ import { ShoppingCart } from "lucide-react";
 import { useUserStore } from "../stores/useUserStore";
 import { useAddToCart } from "../queries/useCart";
 import LikeButton from "./LikeButton";
-import WhatsAppButton from "./whatsapp/WhatsAppButton";
 
 const ProductCard = ({ product }) => {
   const { user } = useUserStore();
