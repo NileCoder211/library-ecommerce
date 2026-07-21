@@ -10,8 +10,8 @@ const categories = [
     imageUrl: "/wardrobe.png",
   },
   {
-    href: "/coffee",
-    name: "coffee",
+    href: "/stools",
+    name: "stools",
     label: "COFFEE TABLES",
     imageUrl: "/coffee.png",
   },

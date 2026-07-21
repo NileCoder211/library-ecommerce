@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import toast from "react-hot-toast";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useWishlist } from "../queries/useWishlist";
 import { useUserStore } from "../stores/useUserStore";
 import ProductCard from "../components/ProductCard";
@@ -118,7 +117,7 @@ const Sidebar = ({
       {/* User */}
       <div className="px-6 py-5 border-b border-gray-100">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center text-white font-serif text-sm flex-shrink-0">
+          <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center text-white font-serif text-sm shrink-0">
             {user?.name?.[0]?.toUpperCase() || "U"}
           </div>
 
@@ -243,7 +242,7 @@ const OrderCard = ({ order, cancelOrder }) => {
         onClick={() => setExpanded(!expanded)}
       >
        {/* Header image */}
-<div className="w-20 h-20 rounded-lg bg-gray-50 overflow-hidden flex-shrink-0 border border-gray-100">
+<div className="w-20 h-20 rounded-lg bg-gray-50 overflow-hidden shrink-0 border border-gray-100">
   {(order.products?.[0]?.image || order.products?.[0]?.product?.images?.[0]?.url) ? (
     <img
       src={order.products[0].image || order.products[0].product?.images?.[0]?.url}
@@ -277,7 +276,7 @@ const OrderCard = ({ order, cancelOrder }) => {
               </p>
             </div>
 
-            <div className="flex items-center gap-3 flex-shrink-0">
+            <div className="flex items-center gap-3 shrink-0">
               <span
                 className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${status.badge}`}
               >
@@ -631,11 +630,19 @@ const UserProfilePage = () => {
   const cancelOrderMutation = useCancelOrder();
 
   const navigate = useNavigate();
+  const { hash } = useLocation();
 
   const [active, setActive] = useState("profile");
   const [mobileOpen, setMobileOpen] = useState(false);
 
- 
+ useEffect(() => {
+  if (hash === "#orders")   setActive("orders");
+  else if (hash === "#saved")    setActive("saved");
+  else if (hash === "#addresses") setActive("addresses");
+  else if (hash === "#settings")  setActive("settings");
+}, [hash]);
+
+
   const handleLogout = async () => {
     await logout();
     navigate("/login");

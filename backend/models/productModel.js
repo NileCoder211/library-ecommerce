@@ -60,12 +60,12 @@ const productSchema = new mongoose.Schema(
 productSchema.methods.toStripeLineItem = function (quantity = 1) {
   return {
     price_data: {
-      currency: "usd",
+      currency: "kes",
       product_data: {
         name: this.name,
         images: this.images.map((img) => img.url),
       },
-      unit_amount: Math.round(this.price * KES_TO_USD * 100), // KES → USD cents
+      unit_amount: Math.round(this.price * 100), // KES cents
     },
     quantity,
   };

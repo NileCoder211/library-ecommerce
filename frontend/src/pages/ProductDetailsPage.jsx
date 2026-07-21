@@ -8,6 +8,7 @@ import axios from "../lib/axios";
 import Footer from "../components/Footer";
 import { useUserStore } from "../stores/useUserStore";
 import { useAddToCart } from "../queries/useCart";
+import WhatsAppButton from "../components/whatsapp/WhatsAppButton";
 import categories from "../components/Categories";
 import LikeButton from "../components/LikeButton";
 
@@ -19,7 +20,6 @@ const ProductDetailsPage = () => {
   const { user } = useUserStore();
   const addToCartMutation = useAddToCart();
 
-  // ── Fetch product via React Query ─────────────────────────────────────────
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", id],
     queryFn: async () => {
@@ -102,28 +102,46 @@ const ProductDetailsPage = () => {
           </p>
 
           {/* BUTTONS */}
-          <div className="mt-6 flex gap-4">
-            <button
-              className={`flex items-center justify-center rounded-lg px-5 py-2.5 text-sm font-medium text-white focus:outline-none focus:ring-4 ${
-                product.stock === 0
-                  ? "bg-red-500 cursor-not-allowed"
-                  : "bg-black hover:bg-gray-400 cursor-pointer"
-              }`}
-              onClick={handleAddToCart}
-              disabled={product.stock === 0 || addToCartMutation.isPending}
-            >
-              <ShoppingCart size={22} className="mr-2" />
-              {product.stock === 0 ? "Out of stock" : "Add to cart"}
-            </button>
+          <div className="mt-6 flex flex-col gap-3">
 
-            {product.stock === 0 && (
+            {/* Row 1 — cart / out of stock */}
+            <div className="flex gap-3">
               <button
-                onClick={() => navigate(`/make-order/${product._id}`)}
-                className="bg-black hover:bg-gray-700 cursor-pointer text-white px-6 py-2 rounded-lg"
+                className={`flex items-center justify-center rounded-lg px-5 py-2.5 text-sm font-medium text-white focus:outline-none focus:ring-4 ${
+                  product.stock === 0
+                    ? "bg-red-500 cursor-not-allowed"
+                    : "bg-black hover:bg-gray-400 cursor-pointer"
+                }`}
+                onClick={handleAddToCart}
+                disabled={product.stock === 0 || addToCartMutation.isPending}
               >
-                Make Order
+                <ShoppingCart size={22} className="mr-2" />
+                {product.stock === 0 ? "Out of stock" : "Add to cart"}
               </button>
-            )}
+
+              {product.stock === 0 && (
+                <button
+                  onClick={() => navigate(`/make-order/${product._id}`)}
+                  className="bg-black hover:bg-gray-700 cursor-pointer text-white px-6 py-2 rounded-lg"
+                >
+                  Make Order
+                </button>
+              )}
+            </div>
+
+            {/* Row 2 — WhatsApp quick order (always available) */}
+            <WhatsAppButton
+              product={{
+                id:    product._id,
+                name:  product.name,
+                price: product.price,
+              }}
+              variant="full"
+            />
+
+            <p className="text-xs text-gray-400">
+              Order via WhatsApp for M-Pesa payment, delivery scheduling, and direct support.
+            </p>
           </div>
         </div>
       </div>

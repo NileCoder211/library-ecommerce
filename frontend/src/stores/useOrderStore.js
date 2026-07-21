@@ -348,27 +348,14 @@ const res = await axios.get(`/orders/all?${query}`);  // ✅ was /admin/orders
     set({ loading: true });
 
     try {
-      const res = await axios.post(
-  `/orders/${orderId}/retry-mpesa`
-);
-      toast.success(
-        res.data.message ||
-          "M-Pesa payment retried"
-      );
+      const res = await axios.post(`/orders/${orderId}/retry-mpesa`);
+      toast.success( res.data.message ||  "M-Pesa payment retried" );
 
-      return {
-        success: true,
-        data: res.data,
-      };
+      return {success: true, data: res.data,};
     } catch (error) {
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to retry payment"
-      );
+      toast.error(error.response?.data?.message ||  "Failed to retry payment" );
 
-      return {
-        success: false,
-      };
+      return {success: false,};
     } finally {
       set({ loading: false });
     }

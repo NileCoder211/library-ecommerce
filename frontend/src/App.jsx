@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import HomePage from "./pages/HomePage";
@@ -16,6 +16,7 @@ import Offer from "./pages/OfferPage";
 import CartPage from "./pages/CartPage";
 import PurchaseSuccessPage from "./pages/PurchaseSuccessPage";
 import PurchaseCancelPage from "./pages/PurchaseCancelPage";
+import WhatsAppChatbot from "./components/whatsapp/Whatsappchatbot";
 
 import Navbar from "./components/Navbar";
 import LoadingSpinner from "./components/LoadingSpinner";
@@ -24,8 +25,10 @@ import { Toaster } from "react-hot-toast";
 
 import { useUserStore } from "./stores/useUserStore";
 
+
 function App() {
   const { user, checkAuth, checkingAuth } = useUserStore();
+  const [drawerOpen, setDrawerOpen] = useState(false);
   console.log({user, checkingAuth,});
 
   // Auth check only
@@ -158,6 +161,10 @@ function App() {
           />
         </Routes>
       </div>
+
+        
+<WhatsAppChatbot />
+
 
       <Toaster />
     </div>
