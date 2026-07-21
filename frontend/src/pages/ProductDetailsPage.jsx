@@ -8,7 +8,6 @@ import axios from "../lib/axios";
 import Footer from "../components/Footer";
 import { useUserStore } from "../stores/useUserStore";
 import { useAddToCart } from "../queries/useCart";
-import WhatsAppButton from "../components/whatsapp/WhatsAppButton";
 import categories from "../components/Categories";
 import LikeButton from "../components/LikeButton";
 
