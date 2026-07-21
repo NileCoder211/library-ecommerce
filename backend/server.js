@@ -5,9 +5,6 @@ import path from "path";
 import cors from "cors"
 import passport from "./lib/passport.js";
 
-
-
-
 import authRoutes from "./routes/authRoute.js";
 import productRoutes from "./routes/productRoute.js";
 import cartRoutes from "./routes/cartRoute.js";
@@ -17,6 +14,8 @@ import analyticsRoutes from "./routes/analyticsRoute.js";
 import mpesaRoutes from "./routes/mpesaRoute.js";
 import orderRoutes from "./routes/orderRoute.js"
 import wishlistRoutes from "./routes/wishlistRoute.js";
+import chatbotRouter from "./routes/chatbotRoute.js";
+
 
 
 
@@ -48,6 +47,7 @@ app.use("/api/mpesa", mpesaRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/wishlist", wishlistRoutes);
+app.use("/api/chatbot", chatbotRouter);
 
 app.use((err, req, res, next) => {
   console.error("GLOBAL ERROR:", err.stack);

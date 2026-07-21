@@ -32,9 +32,9 @@ const { data: cart = [] } = useCart(!!user); // ← only fetch when logged in
   return (
     <>
       <header className="fixed top-0 left-0 w-full h-16 z-50 bg-[#faf9f7]/95 backdrop-blur-md shadow-sm">
-        <div className="container mx-auto px-4 h-full flex justify-between items-center">
-          {/* Logo */}
-          <Link to="/" className="flex items-center flex-shrink-0">
+        <div className="container mx-auto px-4 h-full flex justify-between items-center md:grid md:grid-cols-3 md:items-center">
+          {/* Logo — Left section */}
+          <Link to="/" className="flex items-center flex-shrink-0 md:justify-self-start">
             <img
               src="/image.png"
               alt="E-Commerce Logo"
@@ -42,8 +42,8 @@ const { data: cart = [] } = useCart(!!user); // ← only fetch when logged in
             />
           </Link>
 
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-3">
+          {/* Desktop Nav — Center section: Home, Offers, Collections */}
+          <nav className="hidden md:flex items-center gap-3 md:justify-self-center">
             <Link
               to="/"
               className="text-sm text-black font-semibold hover:text-gray-500 transition"
@@ -96,7 +96,10 @@ const { data: cart = [] } = useCart(!!user); // ← only fetch when logged in
                 </>
               )}
             </div>
+          </nav>
 
+          {/* Right section: cart, admin, auth */}
+          <div className="hidden md:flex items-center gap-3 md:justify-self-end">
             {/* Cart */}
             {user && (
               <Link
@@ -168,7 +171,7 @@ const { data: cart = [] } = useCart(!!user); // ← only fetch when logged in
                 </Link>
               </>
             )}
-          </nav>
+          </div>
 
           {/* Mobile Right */}
           <div className="flex md:hidden items-center gap-3">

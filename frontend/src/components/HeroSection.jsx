@@ -59,7 +59,7 @@ const HeroSection = () => {
         setCurrent(index);
         setTextVisible(true);
         setAnimating(false);
-      }, 400);
+      }, 250);
     },
     [animating, current]
   );
@@ -68,7 +68,7 @@ const HeroSection = () => {
   useEffect(() => {
     const timer = setInterval(() => {
       goTo((current + 1) % slides.length);
-    }, 5000);
+    }, 2000);
 
     return () => clearInterval(timer);
   }, [current, goTo]);
@@ -81,7 +81,7 @@ const HeroSection = () => {
       <div className="flex w-full flex-col justify-center px-6 py-2 sm:px-10 lg:px-20 md:w-1/2">
         {/* Label */}
         <span
-          className={`mb-5 block text-xs uppercase tracking-[0.25em] text-[#7c5730] transition-all duration-500 ${
+          className={`mb-5 block text-xs uppercase tracking-[0.25em] text-[#7c5730] transition-all duration-300 ${
             textVisible
               ? "translate-y-0 opacity-100"
               : "translate-y-3 opacity-0"
@@ -92,7 +92,7 @@ const HeroSection = () => {
 
         {/* Heading */}
         <h1
-          className={`whitespace-pre-line font-serif text-5xl italic leading-[1.05] text-black transition-all duration-500 sm:text-6xl lg:text-7xl ${
+          className={`whitespace-pre-line font-serif text-5xl italic leading-[1.05] text-black transition-all duration-300 sm:text-6xl lg:text-7xl ${
             textVisible
               ? "translate-y-0 opacity-100"
               : "translate-y-4 opacity-0"
@@ -103,7 +103,7 @@ const HeroSection = () => {
 
         {/* Subtext */}
         <p
-          className={`mt-8 max-w-md text-base leading-relaxed text-gray-500 transition-all duration-500 delay-100 ${
+          className={`mt-8 max-w-md text-base leading-relaxed text-gray-500 transition-all duration-300 delay-100 ${
             textVisible
               ? "translate-y-0 opacity-100"
               : "translate-y-4 opacity-0"
@@ -114,7 +114,7 @@ const HeroSection = () => {
 
         {/* Buttons */}
         <div
-          className={`mt-10 flex flex-col gap-4 sm:flex-row transition-all duration-500 delay-200 ${
+          className={`mt-10 flex flex-col gap-4 sm:flex-row transition-all duration-300 delay-200 ${
             textVisible
               ? "translate-y-0 opacity-100"
               : "translate-y-4 opacity-0"
@@ -144,7 +144,7 @@ const HeroSection = () => {
                     className="absolute inset-y-0 left-0 bg-black"
                     style={{
                       animation:
-                        "hero-progress 5s linear forwards",
+                        "hero-progress 2s linear forwards",
                     }}
                   />
                 )}
