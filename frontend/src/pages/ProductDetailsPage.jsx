@@ -10,7 +10,7 @@ import { useUserStore } from "../stores/useUserStore";
 import { useAddToCart } from "../queries/useCart";
 import categories from "../components/Categories";
 import LikeButton from "../components/LikeButton";
-import WhatsAppButton from "../components/whatsapp/WhatsAppButton";
+import WhatsAppButton from "../components/whatsapp/Whatsappbutton";
 
 const ProductDetailsPage = () => {
   const navigate = useNavigate();
