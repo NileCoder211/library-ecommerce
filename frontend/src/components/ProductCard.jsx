@@ -1,7 +1,7 @@
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { ShoppingCart } from "lucide-react";
-
+import WhatsAppButton from "./whatsapp/Whatsappbutton";
 import { useUserStore } from "../stores/useUserStore";
 import { useAddToCart } from "../queries/useCart";
 import LikeButton from "./LikeButton";
