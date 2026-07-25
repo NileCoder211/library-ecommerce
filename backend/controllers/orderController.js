@@ -4,6 +4,7 @@ import Product from "../models/productModel.js";
 import Coupon from "../models/couponModel.js";
 import { stripe } from "../lib/stripe.js";
 import {generateOrderNumber} from "../lib/generateOrderNumber.js"
+import { kesToUsd } from "../lib/currency.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -118,6 +119,12 @@ export const checkoutSuccess = async (req, res) => {
 
     // ── Create order ──────────────────────────────────────────────────────────
     // ── Atomic upsert — safe against concurrent requests ─────────────────────────
+
+    const totalAmountKES = orderProducts.reduce(
+  (sum, item) => sum + item.price * item.quantity,
+  0
+);
+
 const order = await Order.findOneAndUpdate(
   { stripeSessionId: session.id },
   {
@@ -125,7 +132,7 @@ const order = await Order.findOneAndUpdate(
       user: userId,
       orderNumber,
       products: orderProducts,
-      totalAmount: session.amount_total / 100,
+      totalAmount: totalAmountKES, // ✅ was session.amount_total / 100
       paymentMethod: "stripe",
       paymentStatus: "paid",
       orderStatus: "processing",
@@ -141,7 +148,7 @@ const order = await Order.findOneAndUpdate(
 
     // ── Reduce stock + coupon ─────────────────────────────────────────────────
     await reduceStock(orderProducts);
-    await handleCouponLogic(userId, couponCode, session.amount_total / 100);
+    await handleCouponLogic(userId, couponCode,totalAmountKES);
 
     return res.status(200).json({ success: true, order });
   } catch (error) {

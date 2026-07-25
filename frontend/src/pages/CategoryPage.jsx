@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import ProductCard from "../components/ProductCard";
+import ProductCardSkeleton from "../components/ProductCardSkeleton";
 import { useProductsByCategory } from "../queries/useProduct";
 
 const PRODUCTS_PER_PAGE = 12;
@@ -83,11 +84,13 @@ const CategoryPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          {isLoading && (
-            <p className="text-gray-500 text-center col-span-full">
-              Loading...
-            </p>
-          )}
+          {isLoading &&
+            // Render enough skeleton cards to fill a full page (same count
+            // as PRODUCTS_PER_PAGE) so the grid's shape while loading looks
+            // like a real, full results page rather than one lonely message.
+            Array.from({ length: PRODUCTS_PER_PAGE }).map((_, i) => (
+              <ProductCardSkeleton key={`skeleton-${i}`} />
+            ))}
 
           {!isLoading && products.length === 0 && (
             <h2 className="text-3xl font-semibold text-gray-500 text-center col-span-full">

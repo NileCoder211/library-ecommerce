@@ -3,6 +3,7 @@ import Order from "../models/orderModel.js";
 import Product from "../models/productModel.js";
 import { stripe } from "../lib/stripe.js";
 import { generateOrderNumber } from "../lib/generateOrderNumber.js";
+import { kesToUsd } from "../lib/currency.js";
 
 // ─────────────────────────────────────────────────────────────
 // Helpers
@@ -68,6 +69,7 @@ const calculateOrderTotals = async (products) => {
       product: product._id,
       quantity: item.quantity,
       price: product.price,
+      name: product.name,
     });
   }
 
@@ -142,16 +144,21 @@ export const createCheckoutSession = async (
       }
     }
 
-    const line_items = validatedProducts.map((item) => ({
+   const line_items = await Promise.all(
+  validatedProducts.map(async (item) => {
+    const priceInUSD = await kesToUsd(item.price);
+    return {
       price_data: {
         currency: "usd",
         product_data: {
-          name: "Furniture Product",
+          name: item.name || "Furniture Product",
         },
-        unit_amount: Math.round(item.price * 100),
+        unit_amount: Math.round(priceInUSD * 100),
       },
       quantity: item.quantity,
-    }));
+    };
+  })
+);
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -268,27 +275,34 @@ const existingOrder = await Order.findOne({ stripeSessionId: session.id });
 
     const orderNumber = await generateOrderNumber("stripe");
 
-   const order = await Order.create({
-     user: session.metadata?.userId,
-     products,
-     totalAmount: session.amount_total / 100,
-     paymentMethod: "stripe",
-     paymentStatus: "paid",
-     orderStatus: "processing",
-     transactionId: session.payment_intent,
-     stripeSessionId: session.id,
-     stripePaymentIntentId: session.payment_intent,
-     orderNumber,
-     shippingAddress,
-   });
+  // Recompute total in KES from the actual product prices —
+// session.amount_total is now in USD cents since Stripe charges in USD
+const totalAmountKES = products.reduce(
+  (sum, item) => sum + item.price * item.quantity,
+  0
+);
 
-    await reduceStock(products);
+const order = await Order.create({
+  user: session.metadata?.userId,
+  products,
+  totalAmount: totalAmountKES,
+  paymentMethod: "stripe",
+  paymentStatus: "paid",
+  orderStatus: "processing",
+  transactionId: session.payment_intent,
+  stripeSessionId: session.id,
+  stripePaymentIntentId: session.payment_intent,
+  orderNumber,
+  shippingAddress,
+});
 
-    await handleCouponLogic(
-      session.metadata?.userId,
-      session.metadata?.couponCode,
-      session.amount_total / 100
-    );
+await reduceStock(products);
+
+await handleCouponLogic(
+  session.metadata?.userId,
+  session.metadata?.couponCode,
+  totalAmountKES
+);
 
     return res.status(200).json({
       success: true,

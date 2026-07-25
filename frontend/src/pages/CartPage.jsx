@@ -8,6 +8,7 @@ import { useCart } from "../queries/useCart";
 import {useUserStore} from "../stores/useUserStore"
 
 import CartItem from "../components/CartItem";
+import CartItemSkeleton from "../components/CartItemSkeleton";
 import PeopleAlsoBought from "../components/PeopleAlsoBought";
 import OrderSummary from "../components/OrderSummary";
 import GiftCouponCard from "../components/GiftCouponCard";
@@ -39,11 +40,20 @@ const CartPage = () => {
      const [coupon, setCoupon] = useState(null);           // ← add
      const [isCouponApplied, setIsCouponApplied] = useState(false); // ← add
 
-  // Optional loading state
+  // Loading state — skeleton rows matching CartItem's shape instead of
+  // a plain text message, so the page doesn't jump when real items mount.
   if (isLoading) {
     return (
-      <div className="py-20 text-center text-black">
-        Loading cart...
+      <div className="py-2 md:py-2">
+        <div className="mx-auto max-w-screen-7xl px-4 2xl:px-0">
+          <div className="mt-3 sm:mt-8 md:gap-6 lg:flex lg:items-start xl:gap-8">
+            <div className="mx-auto w-full flex-none lg:max-w-2xl xl:max-w-4xl space-y-6">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <CartItemSkeleton key={i} />
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

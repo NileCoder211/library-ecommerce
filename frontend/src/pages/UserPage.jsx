@@ -3,6 +3,7 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useWishlist } from "../queries/useWishlist";
 import { useUserStore } from "../stores/useUserStore";
 import ProductCard from "../components/ProductCard";
+import ProductCardSkeleton from "../components/ProductCardSkeleton";
 
 import {
   Package,
@@ -549,8 +550,6 @@ const OrdersSection = ({
 // SAVED PIECES SECTION
 // ─────────────────────────────────────────────────────────────────────────────
 
-
-
 const SavedPiecesSection = () => {
   const { user } = useUserStore();
   const { data: wishlist = [], isLoading } = useWishlist(!!user);
@@ -563,9 +562,12 @@ const SavedPiecesSection = () => {
           <p className="text-sm text-gray-500">Your curated furniture collection.</p>
         </div>
 
+        {/* Uses the same ProductCardSkeleton as FeaturedProducts and
+            CategoryPage, so this matches the shape of the real ProductCard
+            grid below rather than a generic pulse block. */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-80 rounded-2xl bg-gray-100 animate-pulse" />
+          {Array.from({ length: 3 }).map((_, i) => (
+            <ProductCardSkeleton key={i} />
           ))}
         </div>
       </div>
@@ -613,11 +615,6 @@ const SavedPiecesSection = () => {
     </div>
   );
 };
-
-
-
-
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN PAGE

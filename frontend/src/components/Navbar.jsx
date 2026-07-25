@@ -42,62 +42,61 @@ const { data: cart = [] } = useCart(!!user); // ← only fetch when logged in
             />
           </Link>
 
-          {/* Desktop Nav — Center section: Home, Offers, Collections */}
-          <nav className="hidden md:flex items-center gap-3 md:justify-self-center">
-            <Link
-              to="/"
-              className="text-sm text-black font-semibold hover:text-gray-500 transition"
-            >
-              Home
-            </Link>
+         {/* Desktop Nav — Center section: Home, Offers, Collections */}
+<nav className="hidden md:flex items-center gap-3 md:justify-self-center">
+  <Link
+    to="/"
+    className="relative text-sm text-black font-semibold hover:text-gray-500 transition
+               after:content-[''] after:absolute after:left-0 after:-bottom-1 after:h-[1.5px] after:w-0
+               after:bg-black after:transition-all after:duration-300 hover:after:w-full"
+  >
+    Home
+  </Link>
 
-            <Link
-              to="/offers"
-              className="text-sm text-black font-semibold hover:text-gray-500 transition"
-            >
-              Offers
-            </Link>
+  <Link
+    to="/offers"
+    className="relative text-sm text-black font-semibold hover:text-gray-500 transition
+               after:content-[''] after:absolute after:left-0 after:-bottom-1 after:h-[1.5px] after:w-0
+               after:bg-black after:transition-all after:duration-300 hover:after:w-full"
+  >
+    Offers
+  </Link>
 
-            {/* Collections dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setCategoryOpen(!categoryOpen)}
-                className="flex items-center gap-1 text-sm text-black font-semibold hover:text-gray-500 transition"
-              >
-                Collections
+  {/* Collections dropdown — opens on hover */}
+  <div className="relative group">
+    <button
+      className="relative flex items-center gap-1 text-sm text-black font-semibold hover:text-gray-500 transition
+                 after:content-[''] after:absolute after:left-0 after:-bottom-1 after:h-[1.5px] after:w-0
+                 after:bg-black after:transition-all after:duration-300 group-hover:after:w-full"
+    >
+      Collections
+      <ChevronDown
+        size={14}
+        className="transition-transform group-hover:rotate-180"
+      />
+    </button>
 
-                <ChevronDown
-                  size={14}
-                  className={`transition-transform ${
-                    categoryOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-
-              {categoryOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-10"
-                    onClick={() => setCategoryOpen(false)}
-                  />
-
-                  <div className="absolute top-full left-0 mt-2 w-44 bg-white border border-gray-100 shadow-lg rounded-lg overflow-hidden z-20">
-                    {CATEGORIES.map((cat) => (
-                      <Link
-                        key={cat}
-                        to={`/category/${cat}`}
-                        onClick={() => setCategoryOpen(false)}
-                        className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-black transition capitalize"
-                      >
-                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                      </Link>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          </nav>
-
+   <div
+  className="absolute top-full left-0 pt-2 w-44 opacity-0 invisible translate-y-1
+             group-hover:opacity-100 group-hover:visible group-hover:translate-y-0
+             transition-all duration-200 z-20"
+>
+  <div className="bg-white border border-gray-100 shadow-lg rounded-lg overflow-hidden">
+    {CATEGORIES.map((cat) => (
+      <Link
+        key={cat}
+        to={`/category/${cat}`}
+        className="relative block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-black transition capitalize
+                   after:content-[''] after:absolute after:left-4 after:bottom-1.5 after:h-[1.5px] after:w-0
+                   after:bg-black after:transition-all after:duration-300 hover:after:w-[calc(100%-2rem)]"
+      >
+        {cat.charAt(0).toUpperCase() + cat.slice(1)}
+      </Link>
+    ))}
+  </div>
+</div>
+  </div>
+</nav>
           {/* Right section: cart, admin, auth */}
           <div className="hidden md:flex items-center gap-3 md:justify-self-end">
             {/* Cart */}

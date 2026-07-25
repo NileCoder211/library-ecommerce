@@ -105,11 +105,6 @@ const Footer = () => (
         <p className="text-sm text-gray-500">
           © 2026 Shamith Furniture. All rights reserved.
         </p>
-        <div className="flex gap-6 text-xs tracking-widest text-gray-500">
-          {["MILAN", "PARIS", "NEW YORK", "LONDON"].map((city) => (
-            <span key={city}>{city}</span>
-          ))}
-        </div>
       </div>
     </div>
   </footer>

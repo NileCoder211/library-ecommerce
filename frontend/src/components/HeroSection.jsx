@@ -76,9 +76,18 @@ const HeroSection = () => {
   const slide = slides[current];
 
   return (
-    <section className="relative flex min-h-[50vh] flex-col overflow-hidden bg-[#faf9f7] md:flex-row">
+    // FIX: replaced `min-h-[50vh]` (a height that GROWS to fit content) with a
+    // fixed `h-[...]` at each breakpoint. Since slide subtexts vary in length,
+    // min-h let the section resize every time the slide changed, shifting the
+    // entire page below it. A fixed height stops that.
+    // Tune these three numbers to taste — just make sure the tallest breakpoint
+    // comfortably fits your longest subtext (currently the "Dining Edit" slide)
+    // without the text overflowing.
+    <section className="relative flex h-[780px] sm:h-[680px] md:h-[600px] flex-col overflow-hidden bg-[#faf9f7] md:flex-row">
       {/* Left Content */}
-      <div className="flex w-full flex-col justify-center px-6 py-2 sm:px-10 lg:px-20 md:w-1/2">
+      {/* Added overflow-hidden as a safety net: if any future slide's copy is
+          longer than what fits, it clips instead of pushing the layout. */}
+      <div className="flex w-full flex-col justify-center overflow-hidden px-6 py-2 sm:px-10 lg:px-20 md:w-1/2">
         {/* Label */}
         <span
           className={`mb-5 block text-xs uppercase tracking-[0.25em] text-[#7c5730] transition-all duration-300 ${
@@ -165,7 +174,10 @@ const HeroSection = () => {
       </div>
 
       {/* Right Image */}
-      <div className="relative h-[400px] w-full md:h-auto md:w-1/2">
+      {/* FIX: `md:h-auto` derived its height from the row (which was itself
+          derived from the left column's content). Now that the parent
+          <section> has a real fixed height, this fills it directly. */}
+      <div className="relative h-[400px] w-full md:h-full md:w-1/2">
         {slides.map((s, i) => (
           <img
             key={i}
