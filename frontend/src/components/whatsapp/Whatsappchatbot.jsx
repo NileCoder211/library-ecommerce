@@ -9,7 +9,7 @@ import { useState, useRef, useEffect } from "react";
 import { X, Send, Loader2, MessageCircle } from "lucide-react";
 
 const BUSINESS_PHONE = import.meta.env.VITE_WHATSAPP_PHONE || "254745653399";
-const API_BASE       = import.meta.env.VITE_API_URL        || "http://localhost:5000/api";
+const API_BASE       = import.meta.env.VITE_API_URL        || "https://library-ecommerce.onrender.com/api";
 
 const WELCOME_MESSAGE = {
   role:    "assistant",
