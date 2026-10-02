@@ -15,7 +15,7 @@ import CreateProductForm from "../components/CreateProductForm";
 import ProductsList from "../components/ProductsList";
 import OrdersTab from "../components/OrdersTab";
 
-import  {useProductStore}  from "../stores/useProductStore";
+import  {useAllProducts}  from "../queries/useProduct";
 
 const tabs = [
   {
@@ -44,11 +44,7 @@ const AdminPage = () => {
   const [activeTab, setActiveTab] = useState("create");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const { fetchAllProducts } = useProductStore();
-
-  useEffect(() => {
-    fetchAllProducts();
-  }, [fetchAllProducts]);
+const { data: products, isLoading, error } = useAllProducts();
 
   const renderContent = () => {
     switch (activeTab) {

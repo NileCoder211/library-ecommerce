@@ -1,6 +1,5 @@
 import express from "express";
 import {
-  checkoutSuccess,
   getUserOrders,
   getSingleOrder,
   updateOrderStatus,
@@ -13,9 +12,8 @@ import { protectRoute, adminRoute } from "../middleware/authMiddleware.js";
 const router = express.Router();
 
 // ── Specific routes FIRST (before any /:id routes) ───────────────────────────
-router.post("/checkout-success", protectRoute, checkoutSuccess);
 router.get("/my-orders", protectRoute, getUserOrders);
-router.get("/all", protectRoute, adminRoute, getAllOrders); // ✅ moved up, renamed to /all
+router.get("/all", protectRoute, adminRoute, getAllOrders);
 
 // ── Param routes LAST ─────────────────────────────────────────────────────────
 router.get("/:id", protectRoute, getSingleOrder);

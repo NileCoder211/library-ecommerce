@@ -2,30 +2,60 @@ import mongoose from "mongoose";
 import Order from "../models/orderModel.js";
 import Product from "../models/productModel.js";
 import Coupon from "../models/couponModel.js";
-import { stripe } from "../lib/stripe.js";
-import {generateOrderNumber} from "../lib/generateOrderNumber.js"
-import { kesToUsd } from "../lib/currency.js";
+import { redis } from "../lib/redis.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Helpers
+// Helpers (exported so mpesaController can reuse them)
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Generates ORD-STR-2026-0001 / ORD-MPS-2026-0001 without a separate Counter model
-
-
-const reduceStock = async (products) => {
-  for (const item of products) {
-    await Product.findByIdAndUpdate(item.product, {
-      $inc: { stock: -item.quantity },
-    });
+// Stock changes must also clear the cached product lists, otherwise the
+// storefront keeps showing stale stock / out-of-stock items.
+const invalidateStockCaches = async () => {
+  try {
+    await redis.del("out_of_stock_products", "featured_products");
+  } catch (error) {
+    console.error("Stock cache invalidation failed:", error.message);
   }
 };
-const handleCouponLogic = async (userId, couponCode, totalAmount) => {
+export const reduceStock = async (products) => {
+  for (const item of products) {
+    // Never goes below 0. The customer has already paid by now, so if two
+    // people bought the last item we log it instead of failing.
+    const before = await Product.findOneAndUpdate(
+      { _id: item.product },
+      [
+        {
+          $set: {
+            stock: { $max: [0, { $subtract: ["$stock", item.quantity] }] },
+          },
+        },
+      ],
+      { returnDocument: "before", updatePipeline: true },
+    );
+    if (before && before.stock < item.quantity) {
+      console.warn(
+        `OVERSOLD: ${before.name} had ${before.stock}, order needed ${item.quantity}`,
+      );
+    }
+  }
+  await invalidateStockCaches();
+};
+
+export const restoreStock = async (products) => {
+  for (const item of products) {
+    await Product.findByIdAndUpdate(item.product, {
+      $inc: { stock: item.quantity },
+    });
+  }
+  await invalidateStockCaches();
+};
+
+export const handleCouponLogic = async (userId, couponCode, totalAmount) => {
   // deactivate used coupon
   if (couponCode) {
     await Coupon.findOneAndUpdate(
       { code: couponCode, userId },
-      { isActive: false }
+      { isActive: false },
     );
   }
 
@@ -36,126 +66,21 @@ const handleCouponLogic = async (userId, couponCode, totalAmount) => {
       {
         $set: {
           code:
-            "GIFT" +
-            Math.random().toString(36).substring(2, 8).toUpperCase(),
+            "GIFT" + Math.random().toString(36).substring(2, 8).toUpperCase(),
           discountPercentage: 10,
-          expirationDate: new Date(
-            Date.now() + 30 * 24 * 60 * 60 * 1000
-          ),
+          expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
           isActive: true,
         },
       },
       {
         upsert: true,
         returnDocument: "after",
-      }
+      },
     );
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// POST /api/orders/checkout-success
-// Called by PurchaseSuccessPage after Stripe redirects back
-// ─────────────────────────────────────────────────────────────────────────────
-export const checkoutSuccess = async (req, res) => {
-  try {
-    const { sessionId } = req.body;
-
-    if (!sessionId) {
-      return res.status(400).json({ message: "Missing sessionId" });
-    }
-
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
-
-    if (session.payment_status !== "paid") {
-      return res.status(400).json({ message: "Payment not completed" });
-    }
-
-    // ── Duplicate guard ───────────────────────────────────────────────────────
- const existing = await Order.findOne({ stripeSessionId: sessionId });
-    if (existing) {
-      return res.status(200).json({ success: true, order: existing });
-    }
-
-    // ── Parse metadata ────────────────────────────────────────────────────────
-    const rawProducts = session.metadata?.products
-      ? JSON.parse(session.metadata.products)
-      : [];
-
-    if (!rawProducts.length) {
-      return res.status(400).json({ message: "No products in session metadata" });
-    }
-
-    // Fetch product names/images from DB (metadata only stores IDs)
-    const productIds = rawProducts.map((p) => p.product || p._id || p.id);
-    const dbProducts = await Product.find({ _id: { $in: productIds } });
-
-    const orderProducts = rawProducts.map((item) => {
-      const productId = item.product || item._id || item.id;
-      const db = dbProducts.find((p) => p._id.toString() === productId.toString());
-      return {
-        product: productId,
-        name: db?.name || item.name || "Product",
-        image: db?.images?.[0]?.url || item.image || "",
-        price: item.price,
-        quantity: item.quantity,
-      };
-    });
-
-    // ── Parse shipping ────────────────────────────────────────────────────────
-    let shippingAddress = {};
-    try {
-      shippingAddress = session.metadata?.shippingAddress
-        ? JSON.parse(session.metadata.shippingAddress)
-        : {};
-    } catch (_) {}
-
-    const phoneNumber = session.metadata?.phoneNumber || "";
-    const userId = session.metadata?.userId || req.user._id;
-    const couponCode = session.metadata?.couponCode || null;
-
-    // ── Generate order number ─────────────────────────────────────────────────
-    const orderNumber = await generateOrderNumber("stripe");
-
-    // ── Create order ──────────────────────────────────────────────────────────
-    // ── Atomic upsert — safe against concurrent requests ─────────────────────────
-
-    const totalAmountKES = orderProducts.reduce(
-  (sum, item) => sum + item.price * item.quantity,
-  0
-);
-
-const order = await Order.findOneAndUpdate(
-  { stripeSessionId: session.id },
-  {
-    $setOnInsert: {
-      user: userId,
-      orderNumber,
-      products: orderProducts,
-      totalAmount: totalAmountKES, // ✅ was session.amount_total / 100
-      paymentMethod: "stripe",
-      paymentStatus: "paid",
-      orderStatus: "processing",
-      stripeSessionId: session.id,
-      transactionId: session.payment_intent,
-      shippingAddress,
-      phoneNumber,
-      estimatedDeliveryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    },
-  },
-  { upsert: true, new: true, setDefaultsOnInsert: true }
-);
-
-    // ── Reduce stock + coupon ─────────────────────────────────────────────────
-    await reduceStock(orderProducts);
-    await handleCouponLogic(userId, couponCode,totalAmountKES);
-
-    return res.status(200).json({ success: true, order });
-  } catch (error) {
-    console.error("checkoutSuccess error:", error);
-    return res.status(500).json({ message: error.message });
-  }
-};
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/orders/my-orders
@@ -166,7 +91,6 @@ export const getUserOrders = async (req, res) => {
       .populate("products.product", "name images")
       .sort({ createdAt: -1 });
 
-    // ✅ Return { orders } so the Zustand store can read res.data.orders
     return res.status(200).json({ orders });
   } catch (error) {
     console.error("getUserOrders error:", error);
@@ -189,7 +113,8 @@ export const getSingleOrder = async (req, res) => {
 
     if (!order) return res.status(404).json({ message: "Order not found" });
 
-    const isOwner = order.user._id.toString() === req.user._id.toString();
+    // order.user can be null if the user account was deleted
+    const isOwner = order.user?._id?.toString() === req.user._id.toString();
     const isAdmin = req.user.role === "admin";
 
     if (!isOwner && !isAdmin) {
@@ -204,35 +129,46 @@ export const getSingleOrder = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PATCH /api/orders/:id/cancel  (user can cancel pending/paid orders)
+// PATCH /api/orders/:id/cancel  (customer can cancel until it is shipped)
+// NOTE: M-Pesa has no automatic refund. If paymentStatus is "paid", the refund
+// (reversal) must be handled manually / via the Safaricom reversal API.
 // ─────────────────────────────────────────────────────────────────────────────
 export const cancelOrder = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id);
-    if (!order) return res.status(404).json({ message: "Order not found" });
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid order ID" });
+    }
 
-    if (order.user.toString() !== req.user._id.toString()) {
+    const existing = await Order.findById(req.params.id);
+    if (!existing) return res.status(404).json({ message: "Order not found" });
+
+    if (existing.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Unauthorized" });
     }
 
-    const cancellable = ["pending", "paid"];
-    if (!cancellable.includes(order.orderStatus)) {
+    // "paid" is a paymentStatus, not an orderStatus – paid orders sit in "processing"
+    const cancellable = ["pending", "processing"];
+    if (!cancellable.includes(existing.orderStatus)) {
       return res.status(400).json({
-        message: `Cannot cancel an order that is already ${order.orderStatus}`,
+        message: `Cannot cancel an order that is already ${existing.orderStatus}`,
       });
     }
 
-    order.orderStatus = "cancelled";
-    order.cancelledAt = new Date();
+    // Atomic transition – guarantees stock is restored only once
+    const order = await Order.findOneAndUpdate(
+      { _id: existing._id, orderStatus: { $in: cancellable } },
+      { $set: { orderStatus: "cancelled", cancelledAt: new Date() } },
+      { new: true },
+    );
 
-    // Restore stock
-    for (const item of order.products) {
-      await Product.findByIdAndUpdate(item.product, {
-        $inc: { stock: item.quantity },
-      });
+    if (!order) {
+      return res
+        .status(400)
+        .json({ message: "Order status changed, please refresh" });
     }
 
-    await order.save();
+    await restoreStock(order.products);
+
     return res.status(200).json({ message: "Order cancelled", order });
   } catch (error) {
     console.error("cancelOrder error:", error);
@@ -243,35 +179,45 @@ export const cancelOrder = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // PATCH /api/orders/:id/status  (admin only)
 // ─────────────────────────────────────────────────────────────────────────────
-// orderController.js — updateOrderStatus
 export const updateOrderStatus = async (req, res) => {
   try {
     const { orderStatus } = req.body;
-    const allowed = ["pending", "processing", "shipped", "delivered", "cancelled"];
+    const allowed = [
+      "pending",
+      "processing",
+      "shipped",
+      "delivered",
+      "cancelled",
+    ];
+
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid order ID" });
+    }
 
     if (!allowed.includes(orderStatus)) {
       return res.status(400).json({ message: "Invalid status" });
     }
 
-    // ✅ Use findByIdAndUpdate — no full-document validation
-    const order = await Order.findByIdAndUpdate(
-      req.params.id,
-      {
-        $set: { orderStatus },
-        ...(orderStatus === "cancelled" ? { $set: { orderStatus, cancelledAt: new Date() } } : {}),
-      },
-      { new: true }
+    const update = { orderStatus };
+    if (orderStatus === "cancelled") update.cancelledAt = new Date();
+
+    // Cancelled orders are final (their stock was already restored), and the
+    // filter makes the transition atomic so stock can't be restored twice.
+    const order = await Order.findOneAndUpdate(
+      { _id: req.params.id, orderStatus: { $ne: "cancelled" } },
+      { $set: update },
+      { new: true },
     );
 
-    if (!order) return res.status(404).json({ message: "Order not found" });
+    if (!order) {
+      const exists = await Order.exists({ _id: req.params.id });
+      return exists
+        ? res.status(400).json({ message: "Order is already cancelled" })
+        : res.status(404).json({ message: "Order not found" });
+    }
 
-    // Restore stock if cancelled
     if (orderStatus === "cancelled") {
-      for (const item of order.products) {
-        await Product.findByIdAndUpdate(item.product, {
-          $inc: { stock: item.quantity },
-        });
-      }
+      await restoreStock(order.products);
     }
 
     return res.status(200).json({ order });
@@ -280,11 +226,16 @@ export const updateOrderStatus = async (req, res) => {
     return res.status(500).json({ message: "Failed to update order" });
   }
 };
+
 // ─────────────────────────────────────────────────────────────────────────────
 // DELETE /api/orders/:id  (admin only)
 // ─────────────────────────────────────────────────────────────────────────────
 export const deleteOrder = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid order ID" });
+    }
+
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: "Order not found" });
 
@@ -297,23 +248,24 @@ export const deleteOrder = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GET /api/orders  (admin — all orders with pagination + analytics)
+// GET /api/orders/all  (admin — all orders with pagination + analytics)
 // ─────────────────────────────────────────────────────────────────────────────
 export const getAllOrders = async (req, res) => {
   try {
-    const page  = Number(req.query.page)  || 1;
-    const limit = Number(req.query.limit) || 10;
-    const skip  = (page - 1) * limit;
+    const page = Math.max(Number(req.query.page) || 1, 1);
+    const limit = Math.min(Math.max(Number(req.query.limit) || 10, 1), 100);
+    const skip = (page - 1) * limit;
 
     const query = {};
     if (req.query.status) query.orderStatus = req.query.status;
 
-    // Search by orderNumber, customer name, or phone
+    // Search by orderNumber or phone (escaped – user input must never be a raw regex)
     if (req.query.search) {
-      const s = req.query.search;
+      const s = escapeRegex(String(req.query.search));
       query.$or = [
         { orderNumber: { $regex: s, $options: "i" } },
-        { phoneNumber: { $regex: s, $options: "i" } },
+        { "shippingAddress.phoneNumber": { $regex: s, $options: "i" } },
+        { "shippingAddress.fullName": { $regex: s, $options: "i" } },
       ];
     }
 
@@ -325,10 +277,13 @@ export const getAllOrders = async (req, res) => {
         .limit(limit),
       Order.countDocuments(query),
       Order.aggregate([
-        { $match: { paymentStatus: "paid" } },
+        // cancelled orders shouldn't count as revenue
+        {
+          $match: { paymentStatus: "paid", orderStatus: { $ne: "cancelled" } },
+        },
         {
           $group: {
-            _id: "$paymentMethod",
+            _id: null,
             total: { $sum: "$totalAmount" },
             count: { $sum: 1 },
           },
@@ -336,9 +291,8 @@ export const getAllOrders = async (req, res) => {
       ]),
     ]);
 
-   const stripeData = revenueData.find((r) => r._id === "stripe");
-const mpesaData  = revenueData.find((r) => r._id === "mpesa");
-    const totalRevenue = (stripeData?.total || 0) + (mpesaData?.total || 0);
+    const totalRevenue = revenueData[0]?.total || 0;
+    const paidOrders = revenueData[0]?.count || 0;
 
     return res.status(200).json({
       orders,
@@ -351,10 +305,9 @@ const mpesaData  = revenueData.find((r) => r._id === "mpesa");
       analytics: {
         totalRevenue,
         totalOrders,
-        stripeRevenue: stripeData?.total  || 0,
-        mpesaRevenue:  mpesaData?.total   || 0,
-        stripeOrders:  stripeData?.count  || 0,
-        mpesaOrders:   mpesaData?.count   || 0,
+        // kept under the old mpesa names so the admin dashboard keeps working
+        mpesaRevenue: totalRevenue,
+        mpesaOrders: paidOrders,
       },
     });
   } catch (error) {

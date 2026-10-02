@@ -1,225 +1,239 @@
-// components/HeroSection.jsx
+import { useEffect, useRef, useState } from "react";
+import { ShoppingBag, UserPlus, FileText } from "lucide-react";
 
-import { useState, useEffect, useCallback } from "react";
-import { ArrowRight } from "lucide-react";
+const AUTOPLAY_MS = 3000;
 
-// ── Slide Data ─────────────────────────────────────────────
+// Each slide is its own self-contained design (per the brief): the
+// first slide is the brand statement ("SEE IT. LOVE IT. BAG IT."),
+// every slide after it follows the "New Arrival" product template.
 const slides = [
   {
-    label: "New Collection 2024",
-    heading: "The Art of\nSerene Living",
-    subtext:
-      "Experience unparalleled comfort with the Aurelius Modular Sofa. Hand-crafted in Italian linen with a focus on architectural silhouette.",
-    cta: "Explore Collection",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuB_0mG1_Anv1x2hi6yLsHZmIhsOTVnw2dwK3ppDqSNxiFWPpiQe6TDIxIjIU76dLGJQujk0acsYHI0NbsjIm8PCbFqw5ol9f2adUGg4R1uT6XxAcy9PE73kbmLyD9M-RruKWEy8QA9igEtgOZ7DeH4mwK0HlVym84HFakk4pe9Z3__BKRj9zyyIF5htVkUcbTsgQ7IXgU4KU3dkpkrGSbbi38XEiApKEG6sX9daGNhxd7HKr52aHct47zGAPA84TO3t4XPXAvDIWQOv",
+    id: "brand",
+    type: "brand",
+    image: "/hero2.png",
+    itemsSold: "18,179+",
+    tagline: ["SPOT IT", "CLICK IT", "ROCK IT"],
+    subtitle: "Handpicked. Never restocked.",
   },
   {
-    label: "Sanctuary Collection",
-    heading: "Rest in\nPure Luxury",
-    subtext:
-      "Our platform beds are precision-engineered for restful nights. Charcoal velvet headboards, natural linen layers — designed for the architectural home.",
-    cta: "Shop Beds",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDU4lCaPuIdTQreubpMxMTzyJcJmJK8VDSyEsV4MumxfX3RNwHnrp3ISml2WqoFYwo_lHEQcPqvJK-inWm0LNbRReI1UYdfRZenMyUlFiI9bJakBzRwKzWh4nYdJH6LG4hlFoAIRGd6N8rtAzOJtf1qZBob9LMSybGQ_Af4foxldO9mwFubMcTKi8gXgLFPEd-9T4B4eGVGhOyKLZghWwuQJVCE1CoCMQUT7mfe-H_pSvOyXKZHw45mLEQaC2y7rFNEi_zqFf5MWrsY",
+    id: "luxe-set",
+    type: "product",
+    image: "/hero1.png",
+    title: "Luxe Set",
+    description:
+      "A two-piece set featuring a relaxed button-down shirt with rolled sleeves, paired with tailored wide-leg trousers for an effortlessly polished silhouette. Finished with a coordinating waist belt.",
+    price: "KES 4,000",
   },
   {
-    label: "Just Arrived",
-    heading: "Sculptural\nForm Meets Oak",
-    subtext:
-      "The Stool Series explores the boundary between functional object and fine sculpture. Hand-carved from reclaimed oak — no two pieces alike.",
-    cta: "Discover Stools",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCJZFXp4HuUPFvgW8aeJLqS-y2Dr7N5ivHT4UIT1wn2mOHqQkiZluXzGpd3PrZWwrwz2PYOt6ZK1ZAHhSPU7siCYMfVxbIeXhsow6EbGd3KMu7sHZ4TMLy6w9wIDNwwPHaRUhnoetJkCMEdOTHKQIXEbVQgM_nA-gZEfluNN0uN_eLpyYVBS3uvl5v_Y0FoY6hjTtdW3Z5aIIxqZjCfydSIp_Nav4Yzo_gV6Lt4jAMlgpEGRA6eIWoen484-sqQ_Tfsflfbg8UoF_el",
+    id: "full-tees",
+    type: "product",
+    image: "/hero8.png",
+    title: "Full Tees — Short Sleeve",
+    description:
+      "A timeless crew-neck tee designed for effortless everyday styling. Soft, comfortable, and easy to pair with denim, tailored trousers, or shorts.",
+    price: "KES 1,000",
   },
   {
-    label: "Dining Edit",
-    heading: "Gather Around\nSolid Walnut",
-    subtext:
-      "Our dining collection centres the room around organic materials and honest craftsmanship. Smooth edges, ceramic pendants, pure natural light.",
-    cta: "Browse Dining",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCjd63qYctRTuq-WyQEhmAXjd95LKoJ6Vmj2aFOkSWpMYpUkgwf1zzrUAnkiZJU-6ztJpmeeMY_cwRTSiWyiUxLLG1UEBYm48GThIFhWBaE3OrTnXtTVa8CX_4TTp31rrWBgX4cbX8bJ0zX5U3IlXQc0ibdgMhUjUAxiO22_GbkfsGXCpVKRUPoQ6JdlG3O8jbhlsOGd-ypuwzEzE1Sn2fS_gJEZ6RjJEZv98UXSwJehG1Q1WYNNWx8QxWofshJAlhc5rwAALRn-HyN",
+    id: "denim-jacket",
+    type: "product",
+    // Was "hero4.png" (no leading slash) — that resolves relative to
+    // whatever route the page is on instead of the site root, unlike
+    // every other slide's image here.
+    image: "/hero4.png",
+    title: "Denim Jacket Classic",
+    description:
+      "A cropped denim jacket with a structured collar and brushed-metal buttons. Layers over everything from tees to slip dresses without ever feeling bulky.",
+    price: "KES 3,500",
+  },
+  {
+    id: "wide-leg-trousers",
+    type: "product",
+    image: "/hero5.png",
+    title: "Wide-Leg Trousers",
+    description:
+      "High-waisted trousers cut for a fluid, wide-leg drape. Lightweight enough for all-day wear, tailored enough to move straight from desk to dinner.",
+    price: "KES 2,800",
+  },
+  {
+    id: "crossbody-bag",
+    type: "product",
+    image: "/hero6.png",
+    title: "Leather Crossbody Bag",
+    description:
+      "A compact crossbody in full-grain leather with an adjustable strap and a single interior pocket sized for a phone, cards, and keys.",
+    price: "KES 5,200",
+  },
+  {
+    id: "slip-dress",
+    type: "product",
+    image: "/hero7.png",
+    title: "Satin Slip Dress",
+    description:
+      "A bias-cut slip in liquid satin that falls just below the knee. Wear it alone for evening or layered under the Denim Jacket Classic for daytime.",
+    price: "KES 3,900",
   },
 ];
 
-const HeroSection = () => {
-  const [current, setCurrent] = useState(0);
-  const [animating, setAnimating] = useState(false);
-  const [textVisible, setTextVisible] = useState(true);
+export default function HeroCarousel() {
+  const [index, setIndex] = useState(0);
+  const intervalRef = useRef(null);
+  const isPausedRef = useRef(false);
 
-  const goTo = useCallback(
-    (index) => {
-      if (animating || index === current) return;
-
-      setAnimating(true);
-      setTextVisible(false);
-
-      setTimeout(() => {
-        setCurrent(index);
-        setTextVisible(true);
-        setAnimating(false);
-      }, 250);
-    },
-    [animating, current]
-  );
-
-  // Auto Slide
   useEffect(() => {
-    const timer = setInterval(() => {
-      goTo((current + 1) % slides.length);
-    }, 2000);
+    intervalRef.current = setInterval(() => {
+      if (!isPausedRef.current) {
+        setIndex((i) => (i + 1) % slides.length);
+      }
+    }, AUTOPLAY_MS);
+    return () => clearInterval(intervalRef.current);
+  }, []);
 
-    return () => clearInterval(timer);
-  }, [current, goTo]);
-
-  const slide = slides[current];
+  const goTo = (i) => setIndex(i);
 
   return (
-    // FIX: replaced `min-h-[50vh]` (a height that GROWS to fit content) with a
-    // fixed `h-[...]` at each breakpoint. Since slide subtexts vary in length,
-    // min-h let the section resize every time the slide changed, shifting the
-    // entire page below it. A fixed height stops that.
-    // Tune these three numbers to taste — just make sure the tallest breakpoint
-    // comfortably fits your longest subtext (currently the "Dining Edit" slide)
-    // without the text overflowing.
-    <section className="relative flex h-[780px] sm:h-[680px] md:h-[600px] flex-col overflow-hidden bg-[#faf9f7] md:flex-row">
-      {/* Left Content */}
-      {/* Added overflow-hidden as a safety net: if any future slide's copy is
-          longer than what fits, it clips instead of pushing the layout. */}
-      <div className="flex w-full flex-col justify-center overflow-hidden px-6 py-2 sm:px-10 lg:px-20 md:w-1/2">
-        {/* Label */}
-        <span
-          className={`mb-5 block text-xs uppercase tracking-[0.25em] text-[#7c5730] transition-all duration-300 ${
-            textVisible
-              ? "translate-y-0 opacity-100"
-              : "translate-y-3 opacity-0"
-          }`}
-        >
-          {slide.label}
-        </span>
-
-        {/* Heading */}
-        <h1
-          className={`whitespace-pre-line font-serif text-5xl italic leading-[1.05] text-black transition-all duration-300 sm:text-6xl lg:text-7xl ${
-            textVisible
-              ? "translate-y-0 opacity-100"
-              : "translate-y-4 opacity-0"
-          }`}
-        >
-          {slide.heading}
-        </h1>
-
-        {/* Subtext */}
-        <p
-          className={`mt-8 max-w-md text-base leading-relaxed text-gray-500 transition-all duration-300 delay-100 ${
-            textVisible
-              ? "translate-y-0 opacity-100"
-              : "translate-y-4 opacity-0"
-          }`}
-        >
-          {slide.subtext}
-        </p>
-
-        {/* Buttons */}
+    <section
+      className="relative h-[97vh] min-h-[420px] w-full overflow-hidden bg-black"
+      onMouseEnter={() => (isPausedRef.current = true)}
+      onMouseLeave={() => (isPausedRef.current = false)}
+    >
+      {slides.map((slide, i) => (
         <div
-          className={`mt-10 flex flex-col gap-4 sm:flex-row transition-all duration-300 delay-200 ${
-            textVisible
-              ? "translate-y-0 opacity-100"
-              : "translate-y-4 opacity-0"
+          key={slide.id}
+          className={`absolute inset-0 transition-opacity duration-700 ease-out ${
+            i === index ? "z-10 opacity-100" : "z-0 opacity-0"
           }`}
+          aria-hidden={i !== index}
         >
-          <button className="flex w-fit items-center gap-2 bg-black px-8 py-4 text-sm text-white transition hover:opacity-80 active:scale-95">
-            {slide.cta}
-            <ArrowRight size={16} />
-          </button>
-
-          <button className="w-fit border border-black px-8 py-4 text-gray-500 text-sm transition hover:bg-black hover:text-white active:scale-95">
-            Request Fabric Swatches
-          </button>
+          <SlideBackground image={slide.image} />
+          {slide.type === "brand" ? (
+            <BrandSlide slide={slide} />
+          ) : (
+            <ProductSlide slide={slide} />
+          )}
         </div>
+      ))}
 
-        {/* Indicators */}
-        <div className="mt-14 flex items-center gap-5">
-          {slides.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => goTo(i)}
-              className="group flex items-center gap-2"
-            >
-              <span className="relative block h-px w-10 overflow-hidden bg-gray-300">
-                {i === current && (
-                  <span
-                    className="absolute inset-y-0 left-0 bg-black"
-                    style={{
-                      animation:
-                        "hero-progress 2s linear forwards",
-                    }}
-                  />
-                )}
-              </span>
-
-              <span
-                className={`text-xs transition ${
-                  i === current
-                    ? "text-black"
-                    : "text-gray-400 group-hover:text-gray-600"
-                }`}
-              >
-                0{i + 1}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Right Image */}
-      {/* FIX: `md:h-auto` derived its height from the row (which was itself
-          derived from the left column's content). Now that the parent
-          <section> has a real fixed height, this fills it directly. */}
-      <div className="relative h-[400px] w-full md:h-full md:w-1/2">
-        {slides.map((s, i) => (
-          <img
-            key={i}
-            src={s.image}
-            alt={s.heading}
-            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
-              i === current
-                ? "opacity-100"
-                : "opacity-0"
-            }`}
-          />
-        ))}
-
-        {/* Counter */}
-        <div className="absolute bottom-8 left-8 flex items-center text-gray-500 gap-3 bg-white/90 px-5 py-3 backdrop-blur-sm">
-          <span className="font-serif text-xl italic">
-            0{current + 1}
-          </span>
-
-          <span className="h-4 w-px bg-gray-300" />
-
-          <span className="text-xs tracking-[0.2em] text-gray-500">
-            0{slides.length}
-          </span>
-        </div>
-      </div>
-
-      {/* Animation */}
-      <style>
-        {`
-          @keyframes hero-progress {
-            from {
-              width: 0%;
-            }
-            to {
-              width: 100%;
-            }
-          }
-        `}
-      </style>
+      <DotNav count={slides.length} activeIndex={index} onSelect={goTo} />
     </section>
   );
-};
+}
 
-export default HeroSection;
+function SlideBackground({ image }) {
+  return (
+    <>
+      <img
+        src={image}
+        alt=""
+        className="absolute inset-0 h-full w-full object-cover "
+      />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-black/60" />
+    </>
+  );
+}
+
+function BrandSlide({ slide }) {
+  return (
+    <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 text-center text-white">
+      <span className="mb-6 flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-medium tracking-wide text-white/80 backdrop-blur-sm">
+        <span className="h-1.5 w-1.5 rounded-full bg-teal-300" />
+        {slide.itemsSold} ITEMS SOLD
+      </span>
+
+      <h1 className="font-serif text-5xl leading-tight sm:text-6xl md:text-7xl">
+        {slide.tagline[0]} <span className="text-teal-300">.</span> {slide.tagline[1]}{" "}
+        <span className="text-teal-300">. {slide.tagline[2]}</span>
+      </h1>
+
+      <p className="mt-4 text-sm tracking-[0.15em] text-white/60">{slide.subtitle}</p>
+
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+        <button
+          type="button"
+          className="flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:bg-white/90"
+        >
+          <ShoppingBag className="h-4 w-4" />
+          Shop Now
+        </button>
+        <button
+          type="button"
+          className="flex items-center gap-2 rounded-full border border-white/25 bg-white/5 px-6 py-3 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white/10"
+        >
+          <UserPlus className="h-4 w-4 text-teal-300" />
+          Join Early Access
+        </button>
+      </div>
+
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-xs text-white/70">
+        <Badge dotColor="bg-emerald-400" label="Sustainable" />
+        <Badge dotColor="bg-sky-400" label="Curated" />
+        <Badge icon={<FileText className="h-3.5 w-3.5" />} label="Size Chart" />
+      </div>
+    </div>
+  );
+}
+
+function Badge({ dotColor, icon, label }) {
+  return (
+    <span className="flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 backdrop-blur-sm">
+      {dotColor ? <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} /> : icon}
+      {label}
+    </span>
+  );
+}
+
+function ProductSlide({ slide }) {
+  return (
+    <div className="relative z-10 flex h-full items-center px-8 md:px-16">
+      <div className="max-w-md text-white">
+        <div className="mb-4 flex items-center gap-2 text-xs font-semibold tracking-[0.2em] text-white/70">
+          <span className="h-px w-6 bg-white/50" />
+          New Arrival
+        </div>
+
+        <h2 className="font-serif text-4xl leading-tight sm:text-5xl">{slide.title}</h2>
+
+        <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/70">
+          {slide.description}
+        </p>
+
+        <div className="mt-6 flex items-center gap-4">
+          <button
+            type="button"
+            className="flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-black transition hover:bg-white/90"
+          >
+            <ShoppingBag className="h-4 w-4" />
+            Shop Now
+          </button>
+          <span className="font-serif text-lg">{slide.price}</span>
+        </div>
+
+        <button
+          type="button"
+          className="mt-4 flex items-center gap-1.5 text-xs text-white/70 underline-offset-4 hover:underline"
+        >
+          <FileText className="h-3.5 w-3.5" />
+          Size chart
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function DotNav({ count, activeIndex, onSelect }) {
+  return (
+    <div className="absolute bottom-6 left-0 right-0 z-20 flex items-center justify-center gap-2">
+      {Array.from({ length: count }).map((_, i) => (
+        <button
+          key={i}
+          type="button"
+          onClick={() => onSelect(i)}
+          aria-label={`Go to slide ${i + 1}`}
+          aria-current={i === activeIndex}
+          className={`h-1.5 rounded-full transition-all ${
+            i === activeIndex ? "w-6 bg-teal-300" : "w-1.5 bg-white/40 hover:bg-white/70"
+          }`}
+        />
+      ))}
+    </div>
+  );
+}

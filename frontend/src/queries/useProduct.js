@@ -2,6 +2,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "../lib/axios";
 import toast from "react-hot-toast";
 
+// The featured / out-of-stock / category lists are separate cache entries.
+// Refresh them whenever an admin change could affect them.
+const refreshProductLists = (queryClient) => {
+  queryClient.invalidateQueries({ queryKey: ["products", "featured"] });
+  queryClient.invalidateQueries({ queryKey: ["products", "out-of-stock"] });
+  queryClient.invalidateQueries({ queryKey: ["products", "category"] });
+};
+
 // ── Fetch all products ────────────────────────────────────────────────────────
 export const useAllProducts = () => {
   return useQuery({
@@ -58,18 +66,16 @@ export const useCreateProduct = () => {
     },
 
     onSuccess: (newProduct) => {
-      // add new product directly into cache
       queryClient.setQueryData(["products"], (old = []) => [
         ...old,
         newProduct,
       ]);
+      refreshProductLists(queryClient);
       toast.success("Product created successfully");
     },
 
     onError: (error) => {
-      toast.error(
-        error.response?.data?.message || "Failed to create product"
-      );
+      toast.error(error.response?.data?.message || "Failed to create product");
     },
   });
 };
@@ -85,17 +91,15 @@ export const useDeleteProduct = () => {
     },
 
     onSuccess: (productId) => {
-      // remove deleted product from cache
       queryClient.setQueryData(["products"], (old = []) =>
         old.filter((p) => p._id !== productId)
       );
+      refreshProductLists(queryClient);
       toast.success("Product deleted");
     },
 
     onError: (error) => {
-      toast.error(
-        error.response?.data?.message || "Failed to delete product"
-      );
+      toast.error(error.response?.data?.message || "Failed to delete product");
     },
   });
 };
@@ -112,17 +116,14 @@ export const useToggleFeatured = () => {
 
     onSuccess: ({ productId, isFeatured }) => {
       queryClient.setQueryData(["products"], (old = []) =>
-        old.map((p) =>
-          p._id === productId ? { ...p, isFeatured } : p
-        )
+        old.map((p) => (p._id === productId ? { ...p, isFeatured } : p))
       );
-        toast.success(isFeatured ? "Product featured" : "Product unfeatured");
+      refreshProductLists(queryClient);
+      toast.success(isFeatured ? "Product featured" : "Product unfeatured");
     },
 
     onError: (error) => {
-      toast.error(
-        error.response?.data?.message || "Failed to update product"
-      );
+      toast.error(error.response?.data?.message || "Failed to update product");
     },
   });
 };
@@ -139,17 +140,14 @@ export const useUpdateStock = () => {
 
     onSuccess: ({ productId, stock }) => {
       queryClient.setQueryData(["products"], (old = []) =>
-        old.map((p) =>
-          p._id === productId ? { ...p, stock } : p
-        )
+        old.map((p) => (p._id === productId ? { ...p, stock } : p))
       );
+      refreshProductLists(queryClient);
       toast.success("Stock updated successfully");
     },
 
     onError: (error) => {
-      toast.error(
-        error.response?.data?.message || "Failed to update stock"
-      );
+      toast.error(error.response?.data?.message || "Failed to update stock");
     },
   });
 };

@@ -5,21 +5,7 @@ import { useUserStore } from "../stores/useUserStore";
 import ProductCard from "../components/ProductCard";
 import ProductCardSkeleton from "../components/ProductCardSkeleton";
 
-import {
-  Package,
-  Heart,
-  MapPin,
-  LogOut,
-  ChevronRight,
-  Plus,
-  Clock,
-  Wrench,
-  CheckCircle,
-  User,
-  Settings,
-  X,
-  Trash2
-} from "lucide-react";
+import {Package,Heart,MapPin,LogOut,ChevronRight,Plus,Clock,Wrench,CheckCircle,User,Settings,X,Trash2} from "lucide-react";
 
 import { useUserOrders, useCancelOrder } from "../queries/useOrder";
 

@@ -7,29 +7,12 @@ const orderItemSchema = new mongoose.Schema(
       ref: "Product",
       required: true,
     },
-
-    name: {
-      type: String,
-      required: false,
-    },
-
-    image: {
-      type: String,
-      required: false,
-    },
-
-    price: {
-      type: Number,
-      required: true,
-    },
-
-    quantity: {
-      type: Number,
-      required: true,
-      min: 1,
-    },
+    name: { type: String, required: false },
+    image: { type: String, required: false },
+    price: { type: Number, required: true },
+    quantity: { type: Number, required: true, min: 1 },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const orderSchema = new mongoose.Schema(
@@ -40,10 +23,12 @@ const orderSchema = new mongoose.Schema(
       required: true,
     },
 
+    // ✅ removed `default: true` – it stamped every order without a number with
+    // the string "true", which then collided on the unique index.
     orderNumber: {
       type: String,
       unique: true,
-      default: true,
+      required: true,
     },
 
     products: [orderItemSchema],
@@ -56,7 +41,8 @@ const orderSchema = new mongoose.Schema(
 
     paymentMethod: {
       type: String,
-      enum: ["stripe", "mpesa"],
+      enum: ["mpesa"],
+      default: "mpesa",
       required: true,
     },
 
@@ -71,43 +57,20 @@ const orderSchema = new mongoose.Schema(
       enum: ["pending", "processing", "shipped", "delivered", "cancelled"],
       default: "pending",
     },
+
     shippingAddress: {
-      fullName: {
-        type: String,
-        required: true,
-      },
-
-      phoneNumber: {
-        type: String,
-        required: true,
-      },
-
-      county: {
-        type: String,
-        required: true,
-      },
-
-      area: {
-        type: String,
-        required: true,
-      },
-
-      landmark: {
-        type: String,
-        default: "",
-      },
-
-      houseNumber: {
-        type: String,
-        default: "",
-      },
+      fullName: { type: String, required: true },
+      phoneNumber: { type: String, required: true },
+      county: { type: String, required: true },
+      area: { type: String, required: true },
+      landmark: { type: String, default: "" },
+      houseNumber: { type: String, default: "" },
     },
 
-    stripeSessionId: { type: String, sparse: true, unique: true },
-    stripePaymentIntentId: String,
-
-    mpesaCheckoutRequestId: String,
-    mpesaReceiptNumber: String,
+    // sparse + unique: Safaricom retries callbacks, this stops duplicate orders
+    mpesaCheckoutRequestId: { type: String, unique: true, sparse: true },
+    mpesaReceiptNumber: { type: String, unique: true, sparse: true },
+    mpesaPhoneNumber: String, // number that paid (needed for reversals)
 
     transactionId: String,
 
@@ -120,5 +83,5 @@ const orderSchema = new mongoose.Schema(
   },
 );
 
- const Order = mongoose.model("Order", orderSchema);
- export default Order;
+const Order = mongoose.model("Order", orderSchema);
+export default Order;

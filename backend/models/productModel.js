@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 
-const KES_TO_USD = 1 / 130; // 1 USD = 130 KES
 
 const productSchema = new mongoose.Schema(
   {
@@ -28,7 +27,7 @@ const productSchema = new mongoose.Schema(
       },
     ],
 
-    // ── Categorisation ───────────────────────────────────────────────────────
+    // ── Categorization ───────────────────────────────────────────────────────
     category: {
       type: String,
       required: true,
@@ -36,41 +35,21 @@ const productSchema = new mongoose.Schema(
     stock: {
       type: Number,
       default: 0,
+      min: 0,
     },
     isFeatured: {
       type: Boolean,
       default: false,
-    },
-
-    // ── Payment method availability ──────────────────────────────────────────
-    availablePaymentMethods: {
-      type: [String],
-      enum: ["stripe", "mpesa"],
-      default: ["stripe", "mpesa"],
     },
   },
   {
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  }
+  },
 );
 
-// ── Helper: Stripe line-item shape (converts KES → USD) ──────────────────────
-productSchema.methods.toStripeLineItem = function (quantity = 1) {
-  return {
-    price_data: {
-      currency: "kes",
-      product_data: {
-        name: this.name,
-        images: this.images.map((img) => img.url),
-      },
-      unit_amount: Math.round(this.price * 100), // KES cents
-    },
-    quantity,
-  };
-};
-
+productSchema.index({ name: "text", description: "text", category: "text" });
 const Product = mongoose.model("Product", productSchema);
 
 export default Product;

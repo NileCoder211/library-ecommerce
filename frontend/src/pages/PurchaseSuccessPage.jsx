@@ -1,66 +1,49 @@
 import { ArrowRight, CheckCircle, HandHeart } from "lucide-react";
-import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import {useClearCart} from "../queries/useCart";
-import axios from "../lib/axios";
 import Confetti from "react-confetti";
+import { useSingleOrder } from "../queries/useOrder";
+
+const formatDelivery = (date) =>
+  date
+    ? new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })
+    : "3–7 days";
 
 const PurchaseSuccessPage = () => {
-  const [order, setOrder] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(true);
-  const [error, setError] = useState(null);
-
-  const clearCartMutation = useClearCart(); // ← replaces useCartStore
   const [searchParams] = useSearchParams();
+  const orderId = searchParams.get("orderId");
 
-  useEffect(() => {
-    const sessionId = searchParams.get("session_id");
-    const orderId = searchParams.get("orderId");
+  // The cart and product stock caches are refreshed by MpesaPendingPage
+  // (and the cart is also emptied server-side when the payment is confirmed).
+  const { data: order, isLoading, isError, error } = useSingleOrder(orderId);
 
-    const loadOrder = async () => {
-      try {
-        let finalOrder;
-
-        if (sessionId) {
-          const res = await axios.post("/orders/checkout-success", { sessionId });
-          finalOrder = res.data.order;
-        } else if (orderId) {
-          const res = await axios.get(`/orders/${orderId}`);
-          finalOrder = res.data.order;
-        } else {
-          throw new Error("No payment reference found");
-        }
-
-        setOrder(finalOrder);
-        clearCartMutation.mutate(); // ← replaces clearCart()
-      } catch (err) {
-        console.error(err);
-        setError(err.message);
-      } finally {
-        setIsProcessing(false);
-      }
-    };
-
-    loadOrder();
-  }, [searchParams]); // ← clearCart removed from dependencies
-
-  if (isProcessing) {
+  if (!orderId) {
     return (
       <div className="h-screen flex items-center justify-center">
-        <p className="text-gray-400 animate-pulse">
-          Confirming your order...
+        <p className="text-red-400">Error: No order reference found</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <p className="text-gray-400 animate-pulse">Confirming your order...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="h-screen flex items-center justify-center px-4 text-center">
+        <p className="text-red-400">
+          {error?.response?.data?.message || "We couldn't load your order."} You can
+          still find it under My Orders.
         </p>
       </div>
     );
   }
 
-  if (error) {
-    return (
-      <div className="h-screen flex items-center justify-center">
-        <p className="text-red-400">Error: {error}</p>
-      </div>
-    );
-  }
+  const receipt = order?.mpesaReceiptNumber || order?.transactionId;
 
   return (
     <div className="h-screen flex items-center justify-center px-4">
@@ -78,11 +61,11 @@ const PurchaseSuccessPage = () => {
         </div>
 
         <h1 className="text-2xl font-bold text-emerald-400 text-center mb-2">
-          Purchase Successful!
+          Payment Successful!
         </h1>
 
         <p className="text-center text-gray-500 mb-6">
-          Thank you for your order
+          Thank you for your order. We're processing it now.
         </p>
 
         <div className="bg-gray-100 p-4 rounded-lg space-y-2">
@@ -94,15 +77,24 @@ const PurchaseSuccessPage = () => {
           </div>
 
           <div className="flex justify-between text-gray-500">
-            <span>Total</span>
+            <span>Amount paid</span>
             <span className="font-semibold text-gray-700">
-              KES {order?.totalAmount?.toLocaleString("en-KE")}
+              KES {Number(order?.totalAmount || 0).toLocaleString("en-KE")}
             </span>
           </div>
 
+          {receipt && (
+            <div className="flex justify-between text-gray-500">
+              <span>M-Pesa code</span>
+              <span className="font-semibold text-gray-700">{receipt}</span>
+            </div>
+          )}
+
           <div className="flex justify-between text-gray-500">
-            <span>Delivery</span>
-            <span className="font-semibold text-gray-700">3–5 days</span>
+            <span>Estimated delivery</span>
+            <span className="font-semibold text-gray-700">
+              {formatDelivery(order?.estimatedDeliveryDate)}
+            </span>
           </div>
         </div>
 
@@ -112,17 +104,17 @@ const PurchaseSuccessPage = () => {
             className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4
              rounded-lg transition duration-300 flex items-center justify-center"
           >
-            <HandHeart className='mr-2' size={22} />
+            <HandHeart className="mr-2" size={22} />
             View My Orders
           </Link>
 
           <Link
             to="/"
-            className="w-full bg-gray-700 hover:bg-gray-600 text-emerald-400 font-bold py-2 px-4 
+            className="w-full bg-gray-700 hover:bg-gray-600 text-emerald-400 font-bold py-2 px-4
             rounded-lg transition duration-300 flex items-center justify-center"
           >
             Continue Shopping
-            <ArrowRight className='ml-2' size={22} />
+            <ArrowRight className="ml-2" size={22} />
           </Link>
         </div>
       </div>

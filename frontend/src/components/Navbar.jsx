@@ -1,8 +1,10 @@
 import { useState } from "react";
-import {  ShoppingCart,  UserPlus,  LogIn,  Lock, Menu, X, ChevronDown,} from "lucide-react";
+import {  ShoppingCart,  UserPlus,  LogIn,  Lock, Menu, X, ChevronDown, Heart} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useUserStore } from "../stores/useUserStore";
 import { useCart } from "../queries/useCart";
+import { useWishlist } from "../queries/useWishlist";
+import SearchBox from "./SearchBox";
 
 const CATEGORIES = [  "sofa",  "beds", "dining",  "wardrobes",  "doors", "stools",];
 
@@ -10,8 +12,8 @@ const Navbar = () => {
   const { user, logout } = useUserStore();
 
   // Navbar.jsx — gate the query on auth
-
-const { data: cart = [] } = useCart(!!user); // ← only fetch when logged in
+const { data: cart = [] } = useCart(!!user);
+const { data: wishlist = [] } = useWishlist(!!user);
 
   const navigate = useNavigate();
 
@@ -32,11 +34,11 @@ const { data: cart = [] } = useCart(!!user); // ← only fetch when logged in
   return (
     <>
       <header className="fixed top-0 left-0 w-full h-16 z-50 bg-[#faf9f7]/95 backdrop-blur-md shadow-sm">
-        <div className="container mx-auto px-4 h-full flex justify-between items-center md:grid md:grid-cols-3 md:items-center">
+       <div className="container mx-auto px-4 h-full flex justify-between items-center md:grid md:grid-cols-[auto_1fr_auto] md:items-center">
           {/* Logo — Left section */}
           <Link to="/" className="flex items-center flex-shrink-0 md:justify-self-start">
             <img
-              src="/image.png"
+              src="/logo.png"
               alt="E-Commerce Logo"
               className="h-10 w-auto object-contain"
             />
@@ -99,7 +101,21 @@ const { data: cart = [] } = useCart(!!user); // ← only fetch when logged in
 </nav>
           {/* Right section: cart, admin, auth */}
           <div className="hidden md:flex items-center gap-3 md:justify-self-end">
-            {/* Cart */}
+             {/* Search */}
+<div className="hidden md:flex items-center flex-1 max-w-xs">
+  <SearchBox />
+</div>
+
+            <Link to="/wishlist" className="relative flex items-center gap-1 text-black" title="Wishlist">
+  <Heart size={22} />
+  {wishlist.length > 0 && (
+    <span className="absolute -top-2 left-3 bg-black text-white rounded-full min-w-[18px] h-[18px] flex items-center justify-center text-[10px]">
+      {wishlist.length}
+    </span>
+  )}
+  <span className="text-sm font-semibold">Saved</span>
+</Link>
+
             {user && (
               <Link
                 to="/cart"
@@ -115,7 +131,6 @@ const { data: cart = [] } = useCart(!!user); // ← only fetch when logged in
               </Link>
             )}
 
-            {/* Admin dashboard shortcut */}
             {isAdmin && (
               <Link
                 to="/secret-dashboard"
@@ -123,13 +138,10 @@ const { data: cart = [] } = useCart(!!user); // ← only fetch when logged in
               >
                 <Lock size={16} className="mr-1" />
 
-                <span className="hidden sm:inline">
-                  Dashboard
-                </span>
+                <span className="hidden sm:inline">Dashboard</span>
               </Link>
             )}
 
-            {/* Logged In */}
             {user ? (
               <div className="flex items-center gap-2">
                 <button

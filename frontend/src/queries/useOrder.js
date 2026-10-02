@@ -23,6 +23,8 @@ export const useAllOrders = ({ page = 1, status = "", search = "" } = {}) => {
       const res = await axios.get(`/orders/all?${query}`);
       return res.data;
     },
+    // keep the old page on screen while the next one loads (no table flicker)
+    placeholderData: (previous) => previous,
   });
 };
 
@@ -39,6 +41,7 @@ export const useSingleOrder = (orderId) => {
 };
 
 // ── Fetch order analytics (admin) ─────────────────────────────────────────────
+// NOTE: make sure the /admin/orders/analytics controller has no Stripe fields left
 export const useOrderAnalytics = () => {
   return useQuery({
     queryKey: ["orders", "analytics"],
@@ -61,34 +64,18 @@ export const useUpdateOrderStatus = () => {
       return res.data.order;
     },
 
-    onSuccess: (updatedOrder) => {
-      // update in all orders list
-      queryClient.setQueryData(
-        ["orders", "all"],
-        (old) => {
-          if (!old) return old;
-          return {
-            ...old,
-            orders: old.orders?.map((o) =>
-              o._id === updatedOrder._id ? updatedOrder : o
-            ),
-          };
-        }
-      );
-
-      // update single order cache
-      queryClient.setQueryData(
-        ["orders", updatedOrder._id],
-        updatedOrder
-      );
-
+    onSuccess: () => {
+      // The admin list is cached under ["orders","all",page,status,search].
+      // setQueryData(["orders","all"], …) never matched that key, so the table
+      // didn't update. Invalidating by prefix refreshes every page/filter.
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      // stock is restored when an order is cancelled
+      queryClient.invalidateQueries({ queryKey: ["products"] });
       toast.success("Order updated successfully");
     },
 
     onError: (error) => {
-      toast.error(
-        error.response?.data?.message || "Failed to update order"
-      );
+      toast.error(error.response?.data?.message || "Failed to update order");
     },
   });
 };
@@ -103,21 +90,20 @@ export const useCancelOrder = () => {
       return { orderId, message: res.data.message };
     },
 
-   onSuccess: ({ orderId, message }) => {
-  queryClient.setQueryData(["orders", "my-orders"], (old = []) =>
-    old.map((o) =>
-      o._id.toString() === orderId.toString() // ← add .toString() on both
-        ? { ...o, orderStatus: "cancelled" }
-        : o
-    )
-  );
-  toast.success(message || "Order cancelled");
-},
+    onSuccess: ({ orderId, message }) => {
+      queryClient.setQueryData(["orders", "my-orders"], (old = []) =>
+        old.map((o) =>
+          String(o._id) === String(orderId)
+            ? { ...o, orderStatus: "cancelled" }
+            : o
+        )
+      );
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast.success(message || "Order cancelled");
+    },
 
     onError: (error) => {
-      toast.error(
-        error.response?.data?.message || "Failed to cancel order"
-      );
+      toast.error(error.response?.data?.message || "Failed to cancel order");
     },
   });
 };
@@ -132,75 +118,22 @@ export const useDeleteOrder = () => {
       return orderId;
     },
 
-    onSuccess: (orderId) => {
-      queryClient.setQueryData(
-        ["orders", "all"],
-        (old) => {
-          if (!old) return old;
-          return {
-            ...old,
-            orders: old.orders?.filter((o) => o._id !== orderId),
-          };
-        }
-      );
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
       toast.success("Order deleted");
     },
 
     onError: (error) => {
-      toast.error(
-        error.response?.data?.message || "Failed to delete order"
-      );
+      toast.error(error.response?.data?.message || "Failed to delete order");
     },
   });
 };
 
-// ── Retry M-Pesa payment ──────────────────────────────────────────────────────
-export const useRetryMpesa = () => {
-  return useMutation({
-    mutationFn: async (orderId) => {
-      const res = await axios.post(`/orders/${orderId}/retry-mpesa`);
-      return res.data;
-    },
-
-    onSuccess: (data) => {
-      toast.success(data.message || "M-Pesa payment retried");
-    },
-
-    onError: (error) => {
-      toast.error(
-        error.response?.data?.message || "Failed to retry payment"
-      );
-    },
-  });
-};
-
-// ── Create Stripe order ───────────────────────────────────────────────────────
-export const useCreateStripeOrder = () => {
-  return useMutation({
-    mutationFn: async (orderData) => {
-      const res = await axios.post(
-        "/payments/create-checkout-session", // ← fix this
-        orderData
-      );
-      return res.data;
-    },
-
-    onError: (error) => {
-      toast.error(
-        error.response?.data?.message || "Failed to create Stripe order"
-      );
-    },
-  });
-};
-
-// ── Create M-Pesa order ───────────────────────────────────────────────────────
+// ── Create M-Pesa order (STK push) ────────────────────────────────────────────
 export const useCreateMpesaOrder = () => {
   return useMutation({
     mutationFn: async (orderData) => {
-      const res = await axios.post(
-        "/mpesa/stkpush", // ← fix this
-        orderData
-      );
+      const res = await axios.post("/mpesa/stkpush", orderData);
       return res.data;
     },
 

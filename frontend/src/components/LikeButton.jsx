@@ -1,26 +1,13 @@
 import { Heart } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useUserStore } from "../stores/useUserStore";
 import { useToggleLike, useIsLiked } from "../queries/useWishlist";
-import toast from "react-hot-toast";
 
 const LikeButton = ({ product, size = 18, className = "" }) => {
-  const { user } = useUserStore();
-  const navigate = useNavigate();
-
   const toggleLikeMutation = useToggleLike();
-  const liked = useIsLiked(product._id, !!user);
+  const liked = useIsLiked(product._id);
 
-  const handleClick = async (e) => {
+  const handleClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-
-    if (!user) {
-      toast.error("Please login to save products");
-      navigate("/login");
-      return;
-    }
-
     toggleLikeMutation.mutate(product);
   };
 

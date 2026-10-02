@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import ProductCard from "./ProductCard";
 
-const FeaturedProducts = ({ featuredProducts }) => {
+const FeaturedProducts = ({ featuredProducts = [] }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(4);
 
@@ -17,23 +17,31 @@ const FeaturedProducts = ({ featuredProducts }) => {
     handleResize();
 
     window.addEventListener("resize", handleResize);
-
-    return () =>
-      window.removeEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const nextSlide = () => {
-    setCurrentIndex((prevIndex) => prevIndex + itemsPerPage);
-  };
+  // Column count changed (resize) → start from the beginning so we never
+  // land on a half-empty slide
+  useEffect(() => {
+    setCurrentIndex(0);
+  }, [itemsPerPage]);
 
-  const prevSlide = () => {
-    setCurrentIndex((prevIndex) => prevIndex - itemsPerPage);
-  };
+  const maxIndex = Math.max(featuredProducts.length - itemsPerPage, 0);
 
-  const isStartDisabled = currentIndex === 0;
+  // also clamps if the list shrinks (e.g. admin un-features a product)
+  const safeIndex = Math.min(currentIndex, maxIndex);
 
-  const isEndDisabled =
-    currentIndex >= featuredProducts.length - itemsPerPage;
+  const nextSlide = () =>
+    setCurrentIndex(Math.min(safeIndex + itemsPerPage, maxIndex));
+
+  const prevSlide = () =>
+    setCurrentIndex(Math.max(safeIndex - itemsPerPage, 0));
+
+  const isStartDisabled = safeIndex === 0;
+  const isEndDisabled = safeIndex >= maxIndex;
+
+  // Nothing featured → don't show an empty section with just a heading
+  if (featuredProducts.length === 0) return null;
 
   return (
     <div className="py-12">
@@ -47,12 +55,10 @@ const FeaturedProducts = ({ featuredProducts }) => {
             <div
               className="flex transition-transform duration-300 ease-in-out"
               style={{
-                transform: `translateX(-${
-                  currentIndex * (100 / itemsPerPage) 
-                }%)`,
+                transform: `translateX(-${safeIndex * (100 / itemsPerPage)}%)`,
               }}
             >
-              {featuredProducts?.map((product) => (
+              {featuredProducts.map((product) => (
                 <div
                   key={product._id}
                   className="w-full sm:w-1/2 lg:w-1/3 xl:w-1/4 shrink-0 px-2"
@@ -67,6 +73,7 @@ const FeaturedProducts = ({ featuredProducts }) => {
           <button
             onClick={prevSlide}
             disabled={isStartDisabled}
+            aria-label="Previous products"
             className={`absolute top-1/2 -left-4 transform -translate-y-1/2 p-2 rounded-full transition ${
               isStartDisabled
                 ? "bg-gray-300 cursor-not-allowed"
@@ -80,6 +87,7 @@ const FeaturedProducts = ({ featuredProducts }) => {
           <button
             onClick={nextSlide}
             disabled={isEndDisabled}
+            aria-label="Next products"
             className={`absolute top-1/2 -right-4 transform -translate-y-1/2 p-2 rounded-full transition ${
               isEndDisabled
                 ? "bg-gray-300 cursor-not-allowed"

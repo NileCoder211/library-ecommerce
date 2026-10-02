@@ -1,11 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Search, Trash2, Eye, RefreshCcw } from "lucide-react";
+import { Search, Trash2, Eye } from "lucide-react";
 import {
   useAllOrders,
   useUpdateOrderStatus,
   useDeleteOrder,
-  useRetryMpesa,
 } from "../queries/useOrder";
 
 const statusColors = {
@@ -21,7 +20,17 @@ const statusOptions = ["pending", "processing", "shipped", "delivered", "cancell
 const OrdersTab = () => {
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
+
+  // Wait for the admin to stop typing before hitting the API
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setSearch(searchInput.trim());
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [searchInput]);
 
   // ── Queries & Mutations ───────────────────────────────────────────────────
   const { data, isLoading } = useAllOrders({ page, status, search });
@@ -30,7 +39,12 @@ const OrdersTab = () => {
 
   const updateStatusMutation = useUpdateOrderStatus();
   const deleteOrderMutation = useDeleteOrder();
-  const retryMpesaMutation = useRetryMpesa();
+
+  const handleDelete = (order) => {
+    if (window.confirm(`Delete order ${order.orderNumber || order._id}? This cannot be undone.`)) {
+      deleteOrderMutation.mutate(order._id);
+    }
+  };
 
   return (
     <motion.div
@@ -47,12 +61,9 @@ const OrdersTab = () => {
           <div className="relative">
             <input
               type="text"
-              placeholder="Search order..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1); // reset to page 1 on new search
-              }}
+              placeholder="Search order, name or phone..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               className="bg-gray-700 text-white rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
             <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
@@ -63,7 +74,7 @@ const OrdersTab = () => {
             value={status}
             onChange={(e) => {
               setStatus(e.target.value);
-              setPage(1); // reset to page 1 on filter change
+              setPage(1);
             }}
             className="bg-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
@@ -93,10 +104,10 @@ const OrdersTab = () => {
             {orders.length > 0 ? (
               orders.map((order) => (
                 <tr key={order._id} className="hover:bg-gray-700/30 transition">
-                  {/* Order ID */}
+                  {/* Order number */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-white">
-                      #{order._id.slice(-6)}
+                      {order.orderNumber || `#${order._id.slice(-6)}`}
                     </div>
                     <div className="text-xs text-gray-400">
                       {new Date(order.createdAt).toLocaleDateString()}
@@ -106,7 +117,7 @@ const OrdersTab = () => {
                   {/* Customer */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-white">
-                      {order.user?.name || "Unknown"}
+                      {order.user?.name || order.shippingAddress?.fullName || "Unknown"}
                     </div>
                     <div className="text-xs text-gray-400">
                       {order.user?.email}
@@ -120,16 +131,20 @@ const OrdersTab = () => {
 
                   {/* Payment */}
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="capitalize text-sm text-gray-300">
-                      {order.paymentMethod}
-                    </span>
+                    <div className="text-sm text-gray-300">M-Pesa</div>
+                    <div className="text-xs text-gray-400">
+                      {order.mpesaReceiptNumber || order.transactionId || order.paymentStatus}
+                    </div>
                   </td>
 
-                  {/* Status */}
+                  {/* Status (cancelled is final – stock was already restored) */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <select
                       value={order.orderStatus}
-                      disabled={updateStatusMutation.isPending}
+                      disabled={
+                        updateStatusMutation.isPending ||
+                        order.orderStatus === "cancelled"
+                      }
                       onChange={(e) =>
                         updateStatusMutation.mutate({
                           orderId: order._id,
@@ -151,26 +166,12 @@ const OrdersTab = () => {
                   {/* Actions */}
                   <td className="px-6 py-4 whitespace-nowrap text-right">
                     <div className="flex items-center justify-end gap-2">
-                      {/* View */}
                       <button className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30">
                         <Eye size={18} />
                       </button>
 
-                      {/* Retry M-Pesa */}
-                      {order.paymentMethod === "mpesa" &&
-                        order.paymentStatus !== "paid" && (
-                          <button
-                            onClick={() => retryMpesaMutation.mutate(order._id)}
-                            disabled={retryMpesaMutation.isPending}
-                            className="p-2 rounded-lg bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30"
-                          >
-                            <RefreshCcw size={18} />
-                          </button>
-                        )}
-
-                      {/* Delete */}
                       <button
-                        onClick={() => deleteOrderMutation.mutate(order._id)}
+                        onClick={() => handleDelete(order)}
                         disabled={deleteOrderMutation.isPending}
                         className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30"
                       >
